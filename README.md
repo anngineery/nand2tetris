@@ -2,8 +2,8 @@
 [Build a Modern Computer from First Principles: From Nand to Tetris](https://www.nand2tetris.org/) offered by Hebrew University of Jerusalem
 
 # Objective
-Build a fully functioning general purpose computer, both hardware and software components, from scratch
-This computer follows [Von Neumann Architecture](https://www.computerscience.gcse.guru/wp-content/uploads/2016/04/Von-Neumann-Architecture-Diagram.jpg)
+Build a fully functioning general purpose computer, both hardware and software components, from scratch.\
+This computer follows [Von Neumann Architecture](https://www.computerscience.gcse.guru/wp-content/uploads/2016/04/Von-Neumann-Architecture-Diagram.jpg).
 # What I have learned from the course
 ## Week 1
 Project: implement boolean logic of 15 elementary logic gates using Hardware Description Language (HDL)
@@ -78,15 +78,15 @@ Project: build Random Access Memory (RAM)
    - 1 cycle = 1 discrete time unit (for simplicity, although time is actually continuous); A cycle should be long enough to account for propagation delays and to signals to stabilize
    - a small triangle symbol on a chip diagram indicates that it takes clock input
 2. Flip-flop: there are many types, but we are focusing on Data Flip-flop (DFF) here
-   - It "moves" input from time t to output at time t (aka remembers the previous state): `out[t] = in[t-1]`
+   - it "moves" input from time t to output at time t (aka remembers the previous state): `out[t] = in[t-1]`
    - takes 1-bit input, clock output and generates 1-bit output
-   - **Important: It remembers the state for only 1 time unit** 
+   - **important: It remembers the state for only 1 time unit** 
 3. 1-bit Register
    - a storage device that can remember the input *forever* unless it is told to load a new value
    - takes 1-bit input, load bit and clock input. Generates 1-bit output
    - `if load[t-1] == 1, out[t] = in[t-1]; else: out[t] = out[t-1]`
-   - How to build 1-bit register using DFF: [diagram](https://i.stack.imgur.com/XjmZNm.png)
+   - how to build 1-bit register using DFF: [diagram](https://i.stack.imgur.com/XjmZNm.png)
       - output is either in[t-1] or output[t-1] depending on the load bit --> requires a mux
       - `else` portion requires a feedback loop
    - width = # of bits it holds (for multi-bit register)
-   - Word = the content of multi-bit register
+   - word = the content of multi-bit register
