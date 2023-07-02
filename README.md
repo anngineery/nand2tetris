@@ -60,3 +60,27 @@ Overflow occurs when there is a carry from the MSB. This gets ignored by compute
 ### Adders
 - Half Adder: add 2 input bits and outputs a sum and a carry bit
 - Full Adder: add 3 input bits and outputs a sum and a carry bit
+
+## Week 3
+Project: build Random Access Memory (RAM) 
+
+### Combinational Logic VS Sequential Logic
+|         | Combinational    | Sequential |
+|---------| -------- | ------- |
+| Purpose | To compute output givn the input values | To preserve data (state) over time |
+| Time dependent | No, output is computed immediately | Yes, it remembers *now* at time t what was injected *before* |
+| Basic element | Logic gates | Flip-flops |
+| Example | ALU | Memory |
+
+### Building Blocks of RAM and Important Terms
+1. Clock
+   - oscillator that generates signals alternating between 0 and 1 at a fixed rate
+   - 1 cycle = 1 discrete time unit (for simplicity, although time is actually continuous); A cycle should be long enough to account for propagation delays and to signals to stabilize
+   - a small triangle symbol on a chip diagram indicates that it takes clock input
+2. Flip-flop: there are many types, but we are focusing on Data Flip-flop (DFF) here
+   - It "moves" input from time t to output at time t (aka remembers the previous state): `out[t] = in[t-1]`
+   - takes 1-bit input, clock output and generates 1-bit output
+   - **Important: It remembers the state for only 1 time unit** 
+3. 1-bit Register
+   - a storage device that can remember the input *forever* unless it is told to load a new value
+   - 
