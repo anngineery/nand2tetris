@@ -88,5 +88,16 @@ Project: build Random Access Memory (RAM)
    - how to build 1-bit register using DFF: [diagram](https://i.stack.imgur.com/XjmZNm.png)
       - output is either in[t-1] or output[t-1] depending on the load bit --> requires a mux
       - `else` portion requires a feedback loop
-   - width = # of bits it holds (for multi-bit register)
+   - register's state = the value currently stored "inside" the register
+   - width (w) = # of bits it holds (for multi-bit register)
    - word = the content of multi-bit register
+   - register is the most basic element of memory
+4. RAM
+   - a main memory of computer that stores both data and instructions
+   - a sequence of n registers that are individually addressable (address range: 0 ~ n-1)
+   - width of address bit (k) = log2(n)
+   - only one register is in action at any given time
+   - takes input of width `w`, address bits of size `k`, a load bit and the clock input. Output size is also `w`
+   - to read register `i`: set address=`i` and probe output. The output should be the state of register `i`
+   - to write `v` to register `i`: set address=`i`, in=`v`, load=1. The state of register `i` becomes `v` and from the next cycle onward, out=`v`
+   - why called "random access"? Irrespective of the size of memory, meaning # of registers inside, any chosen register can be access in the same amount of time
