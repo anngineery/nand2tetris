@@ -101,3 +101,10 @@ Project: build Random Access Memory (RAM)
    - to read register `i`: set address=`i` and probe output. The output should be the state of register `i`
    - to write `v` to register `i`: set address=`i`, in=`v`, load=1. The state of register `i` becomes `v` and from the next cycle onward, out=`v`
    - why called "random access"? Irrespective of the size of memory, meaning # of registers inside, any chosen register can be access in the same amount of time
+5. Program Counter (PC)
+   - contains the address of instruction that needs to be executed next
+   - Three possible control settings:
+      - reset (fetch the first instruction): PC = 0
+      - increment (fetch the next instruction): PC++
+      - goto (skip to instruction n): PC = n
+   - has three control bits (reset, inc, load) along with input bits and the clock input
