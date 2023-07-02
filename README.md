@@ -83,4 +83,10 @@ Project: build Random Access Memory (RAM)
    - **Important: It remembers the state for only 1 time unit** 
 3. 1-bit Register
    - a storage device that can remember the input *forever* unless it is told to load a new value
-   - 
+   - takes 1-bit input, load bit and clock input. Generates 1-bit output
+   - `if load[t-1] == 1, out[t] = in[t-1]; else: out[t] = out[t-1]`
+   - How to build 1-bit register using DFF: [diagram](https://i.stack.imgur.com/XjmZNm.png)
+      - output is either in[t-1] or output[t-1] depending on the load bit --> requires a mux
+      - `else` portion requires a feedback loop
+   - width = # of bits it holds (for multi-bit register)
+   - Word = the content of multi-bit register
