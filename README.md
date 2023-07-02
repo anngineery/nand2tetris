@@ -3,7 +3,7 @@
 
 # Objective
 Build a fully functioning general purpose computer, both hardware and software components, from scratch
-
+This computer follows [Von Neumann Architecture](https://www.computerscience.gcse.guru/wp-content/uploads/2016/04/Von-Neumann-Architecture-Diagram.jpg)
 # What I have learned from the course
 ## Week 1
 Project: implement boolean logic of 15 elementary logic gates using Hardware Description Language (HDL)
@@ -68,7 +68,7 @@ Project: build Random Access Memory (RAM)
 |         | Combinational    | Sequential |
 |---------| -------- | ------- |
 | Purpose | To compute output givn the input values | To preserve data (state) over time |
-| Time dependent | No, output is computed immediately | Yes, it remembers *now* at time t what was injected *before* |
+| Time dependent | No, output is computed immediately\ `out[t] = in[t]` | Yes, it remembers *now* at time t what was injected *before*\ `out[t] = in[t-1]` |
 | Basic element | Logic gates | Flip-flops |
 | Example | ALU | Memory |
 
