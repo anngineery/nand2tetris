@@ -174,10 +174,15 @@ Project: Writing programs with assembly language
 2. Immediate addressing: load constants
    - (ex) LOADI R1, 67 // 67 -> R1
 3. Indirect addressing: instruction specifies a _memory location_ that contains the target address (i.e. value in a memory location refers to another address, not a data). Used to handle pointers
-   - (ex) High level: `x = foo[j]`
-     this is `foo` array-> [*| | | | | | | | ]
-                            ^ represents the base address
-      Machine language translation
-     ADD R1, foo, j // foo + j -> R1
-     LOAD* R2, R1   // Mem[R1] -> R2
-     STORE R2, x    // R2 -> x 
+   - (ex)
+     > High level: `x = foo[j]`
+     > 
+     > this is `foo` array-> [*| | | | | | | | ] ( `*` represents the base address)
+     >
+     > Machine language translation:
+     >
+     > ADD R1, foo, j // foo + j -> R1
+     >
+     > LOAD* R2, R1   // Mem[R1] -> R2
+     >
+     > STORE R2, x    // R2 -> x 
