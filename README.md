@@ -114,7 +114,8 @@ Project: Writing programs with assembly language
 
 ### Assembly, Assembler
 - Assembly: a low-level symbolic language
-- Assembler: translate assembly programs into binary codes (machine language). HW fetches, interprets and executes these instructions. 
+- Assembler: translate assembly programs into binary code (machine language). HW fetches, interprets and executes these instructions.
+- So assembly language and binary code are 2 different expressions for the same semantics (assembly - friendly for humans, binary - friendly for computers)
 
 ### Machine Language
 - specification of interface between SW and HW. It only consists of 0s and 1s, so pretty much unreadable to humans, but it is designed to manipulate HW directly.
@@ -123,16 +124,16 @@ Project: Writing programs with assembly language
   2. Fetch and store values from the memory
   3. Move values from a register to another
   4. Test boolean conditions
-- So what does the HW do
 
 ### Important HW Components
+[High-level diagram](https://static.javatpoint.com/computer/images/register-memory.png)
 - Memory:
    - Purpose: store data and instructions
    - Structure: an array of cells of a fixed length (called "word"). Each cell has its own unique address
    - Notation used: `Memory[addr]` `RAM[addr]` `M[addr]`
 - Processor (CPU):
    - Purpose: perform a set of elementary operations (ex) arithmetic, logic, memory access, branching
-   - Result of operations is stored in registers or selected memory location
+   - contantly have to interact with the memeory to get the operands and store the result of the operation in registers or selected memory location
 - Register:
    - Purpose: hold 1 value, served as a high-speed local memory. Faster to access than the main memory, which is bigger and further away
    - Structure: similar to memory, a register has a fixed width (word size)
@@ -140,3 +141,8 @@ Project: Writing programs with assembly language
    - CPU needs a protocol (a set of rules) to talk to an I/O device. SW driver knows and handles this protocol
    - I/O device has a specific memeory location designated to itself to store its data
    - (ex) Mouse -> uses memory addr 12345 to store the last cursor position
+
+### Specifically, HACK Computer HW
+- Von Neumann architecture: same computer can be used for different objectives based on the program it's running (universality of computer)
+- Memory address space: 15 bits -> have 2^15 (32768 = 32k) locations in the memory 
+- 16-bit machine -> meaning, word size is 16 bits. Registers store 16-bit values and data/instructions in the memory are also 16 bits
