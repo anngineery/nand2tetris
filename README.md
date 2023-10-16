@@ -143,6 +143,7 @@ Project: Writing programs with assembly language
    - (ex) Mouse -> uses memory addr 12345 to store the last cursor position
 
 ### Specifically, HACK Computer HW
-- Von Neumann architecture: same computer can be used for different objectives based on the program it's running (universality of computer)
+![Architecture diagram](hack_computer_arch.png)
+- ~~Von Neumann architecture~~ (I think it is closer to Harvard architecture. See [here](https://courses.cs.washington.edu/courses/cse490h1/19wi/exhibit/john-von-neumann-1.html)): same computer can be used for different objectives based on the program it's running (universality of computer)
 - Memory address space: 15 bits -> have 2^15 (32768 = 32k) locations in the memory 
 - 16-bit machine -> meaning, word size is 16 bits. Registers store 16-bit values and data/instructions in the memory are also 16 bits
