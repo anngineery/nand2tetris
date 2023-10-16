@@ -16,7 +16,7 @@ Going from (1) -> (2): substitute possible input values and evaluate the output\
 Going from (2) -> (1): construct a disjunctive normal form formula and simplify the expression using boolean identities
 
 ### Boolean Identities
-[table](http://www.cs.ucc.ie/osullb/cs1101/labs/08a/identities.jpg)
+![table](http://www.cs.ucc.ie/osullb/cs1101/labs/08a/identities.jpg)
 
 ### Important & Interesting Theorem
 Any boolean function can be represetned only using AND, NOT and OR gates\
@@ -126,7 +126,7 @@ Project: Writing programs with assembly language
   4. Test boolean conditions
 
 ### Important HW Components
-[High-level diagram](https://static.javatpoint.com/computer/images/register-memory.png)
+![High-level diagram](https://static.javatpoint.com/computer/images/register-memory.png)
 - Memory:
    - Purpose: store data and instructions
    - Structure: an array of cells of a fixed length (called "word"). Each cell has its own unique address
@@ -147,3 +147,19 @@ Project: Writing programs with assembly language
 - ~~Von Neumann architecture~~ (I think it is closer to Harvard architecture. See [here](https://courses.cs.washington.edu/courses/cse490h1/19wi/exhibit/john-von-neumann-1.html)): same computer can be used for different objectives based on the program it's running (universality of computer)
 - Memory address space: 15 bits -> have 2^15 (32768 = 32k) locations in the memory 
 - 16-bit machine -> meaning, word size is 16 bits. Registers store 16-bit values and data/instructions in the memory are also 16 bits
+- Registers:
+   - D register: inside CPU
+   - A register: inside CPU
+   - M register: inside RAM. Represent RAM register addressed by A. There can only be one `M` at a time. (i.e. `M = RAM[A]`)
+ 
+### HACK Computer Instructions
+- A (addressing) instructions: set A register to 15-bit value that represents a memory address
+   - Syntax: (symbolic representation) `@value` | (binary representation) `0vvv vvvv vvvv vvvv`
+   - Purpose:
+        1. Only way to enter a constant into computer
+        2. Prerequisite step for the next C instruction designed to manipulate the data memory
+        3. Prerequisite step for a jump (branching), because it specifies the jump destination
+- C (conditional) instructions: `dest = comp; jump` format
+     - destination: where to store the computed value
+     - compute: what to compute
+     - jump: what instruction to execute next
