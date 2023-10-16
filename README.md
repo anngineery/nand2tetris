@@ -159,7 +159,25 @@ Project: Writing programs with assembly language
         1. Only way to enter a constant into computer
         2. Prerequisite step for the next C instruction designed to manipulate the data memory
         3. Prerequisite step for a jump (branching), because it specifies the jump destination
-- C (conditional) instructions: `dest = comp; jump` format
-     - destination: where to store the computed value
-     - compute: what to compute
-     - jump: what instruction to execute next
+- C (conditional) instructions: control the flow of the program
+   - Syntax: `dest = comp; jump`
+      - destination: where to store the computed value
+      - compute: what to compute
+      - jump: what instruction to execute next
+   - Purpose:
+      - allow repetitions (loops), conditional statements and subroutine calling
+ 
+### 3 Different Modes of Memory Access 
+1. Direct addressing: specify address or use a symbol that represents the address
+   - (ex) LOAD R1, 67 // Mem[67] -> R1
+   - (ex) LOAD R1, bar 
+2. Immediate addressing: load constants
+   - (ex) LOADI R1, 67 // 67 -> R1
+3. Indirect addressing: instruction specifies a _memory location_ that contains the target address (i.e. value in a memory location refers to another address, not a data). Used to handle pointers
+   - (ex) High level: `x = foo[j]`
+     this is `foo` array-> [*| | | | | | | | ]
+                            ^ represents the base address
+      Machine language translation
+     ADD R1, foo, j // foo + j -> R1
+     LOAD* R2, R1   // Mem[R1] -> R2
+     STORE R2, x    // R2 -> x 
