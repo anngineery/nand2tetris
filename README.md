@@ -108,3 +108,35 @@ Project: build Random Access Memory (RAM)
       - increment (fetch the next instruction): PC++
       - goto (skip to instruction n): PC = n
    - has three control bits (reset, inc, load) along with input bits and the clock input
+
+## Week 4
+Project: Writing programs with assembly language
+
+### Assembly, Assembler
+- Assembly: a low-level symbolic language
+- Assembler: translate assembly programs into binary codes (machine language). HW fetches, interprets and executes these instructions. 
+
+### Machine Language
+- specification of interface between SW and HW. It only consists of 0s and 1s, so pretty much unreadable to humans, but it is designed to manipulate HW directly.
+- Usually there are following types of machine language instructions:
+  1. Perform arithmetic and logical operations
+  2. Fetch and store values from the memory
+  3. Move values from a register to another
+  4. Test boolean conditions
+- So what does the HW do
+
+### Important HW Components
+- Memory:
+   - Purpose: store data and instructions
+   - Structure: an array of cells of a fixed length (called "word"). Each cell has its own unique address
+   - Notation used: `Memory[addr]` `RAM[addr]` `M[addr]`
+- Processor (CPU):
+   - Purpose: perform a set of elementary operations (ex) arithmetic, logic, memory access, branching
+   - Result of operations is stored in registers or selected memory location
+- Register:
+   - Purpose: hold 1 value, served as a high-speed local memory. Faster to access than the main memory, which is bigger and further away
+   - Structure: similar to memory, a register has a fixed width (word size)
+- Input/Output Device
+   - CPU needs a protocol (a set of rules) to talk to an I/O device. SW driver knows and handles this protocol
+   - I/O device has a specific memeory location designated to itself to store its data
+   - (ex) Mouse -> uses memory addr 12345 to store the last cursor position
