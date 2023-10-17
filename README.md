@@ -178,7 +178,7 @@ Project: Writing programs with assembly language
 
 ### HACK Computer Symbols
 Predefined symbols for a special subset of RAM addresses
-1. Virtual registers: R0-R15
+1. Virtual registers: R0-R15 (equivalent to M[0]-M[15]
 2. Predefined pointers: SP(R0), LCL(R1), ARG(R2), THIS(R3), THAT(R4)
 3. I/O pointers: SCREEN(=M[16384]), KBD(=M[24576]) NOTE - 16384 and 24576 are base addresses of the memory map
 
@@ -204,3 +204,16 @@ Predefined symbols for a special subset of RAM addresses
      > LOAD* R2, R1   // Mem[R1] -> R2
      >
      > STORE R2, x    // R2 -> x 
+
+### Syntax Conventions & File Format
+- Binary code file: .hack extension, each line = sequence of 16 0s and 1s = 1 machine instruction
+- Assembly language file: .asm extension, each line = either an A instruction, C instruction or a symbol declaration (Note that symbol declaration is a pseudo-command that does not generate an equivalent machine code. It only causes the assembler to assign the label `symbol` to the memory location of the instruction that follows `(symbol)` statement)
+- Constants: positive #s written in decimal format
+- Symbols: cannot start with a digit, but can consist of digits, letters, underscores, dots, dollar signs and colons
+- Comments: `//`
+- Whitespace: can be used for better readability, but get ignored by the assembler
+- Case Convention (HACK is case-sensitive!):
+   - Assembly mnemonics -> all caps
+   - Labels -> all caps
+   - Variables -> lower case
+- End the program with an infinite loop, otherwise the program will keep going
