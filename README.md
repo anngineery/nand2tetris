@@ -151,6 +151,15 @@ Project: Writing programs with assembly language
    - D register: inside CPU
    - A register: inside CPU
    - M register: inside RAM. Represent RAM register addressed by A. There can only be one `M` at a time. (i.e. `M = RAM[A]`)
+- Screen (output device):
+   - 512 * 256 pixels. Since each pixel is 1 bit (turn on/off), we need 131072 bits to represent the full screen
+   - Each memory location can hold 16 bits. 131072/16 = 8192 = 8*1024 locations should be allocated
+   - 16 bits * 32 = 512 bits --> 1 row is spread across 32 consecutive addresses
+   - Remember that word size (the atomic unit) is 16 bits, therefore we cannot access an individual bit but access the whole word
+   - (ex) want to access screen(r, c) -> The target word is: RAM[16384 + r * 32 + c/16]. Within that word, (c % 16)th bit is the one we want
+- Keyboard (input device):
+   - Single word memory map located at address 24576
+   - When a key is pressed, 16 bit ASCII code. When key is not pressed, the whole word is 0
  
 ### HACK Computer Instructions
 - A (addressing) instructions: set A register to 15-bit value that represents a memory address
@@ -166,7 +175,16 @@ Project: Writing programs with assembly language
       - jump: what instruction to execute next
    - Purpose:
       - allow repetitions (loops), conditional statements and subroutine calling
- 
+
+### HACK Computer Symbols
+Predefined symbols for a special subset of RAM addresses
+1. Virtual registers: R0-R15
+2. Predefined pointers: SP(R0), LCL(R1), ARG(R2), THIS(R3), THAT(R4)
+3. I/O pointers: SCREEN(=M[16384]), KBD(=M[24576]) NOTE - 16384 and 24576 are base addresses of the memory map
+
+**Label symbols** are user-defined symbols used to label destinations of `goto` commands. It can only be defined once and can be used anywhere in the program even before the definition.
+**Variable symbols** - assembler chooses an unique memory address starting M[16]
+
 ### 3 Different Modes of Memory Access 
 1. Direct addressing: specify address or use a symbol that represents the address
    - (ex) LOAD R1, 67 // Mem[67] -> R1
