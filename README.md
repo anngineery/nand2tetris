@@ -78,7 +78,7 @@ Project: build Random Access Memory (RAM)
    - 1 cycle = 1 discrete time unit (for simplicity, although time is actually continuous); A cycle should be long enough to account for propagation delays and to signals to stabilize
    - a small triangle symbol on a chip diagram indicates that it takes clock input
 2. Flip-flop: there are many types, but we are focusing on Data Flip-flop (DFF) here
-   - it "moves" input from time t to output at time t (aka remembers the previous state): `out[t] = in[t-1]`
+   - it "moves" input from time t to output at time t+1 (aka remembers the previous state): `out[t] = in[t-1]`
    - takes 1-bit input, clock output and generates 1-bit output
    - **important: It remembers the state for only 1 time unit** 
 3. 1-bit Register
