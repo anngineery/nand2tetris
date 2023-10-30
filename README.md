@@ -217,3 +217,38 @@ Predefined symbols for a special subset of RAM addresses
    - Labels -> all caps
    - Variables -> lower case
 - End the program with an infinite loop, otherwise the program will keep going
+
+## Week 5
+Project: Build a full Hack Computer System that can run Hack assembly language programs (week 4) using components built from week 1-3 
+
+### Universal Turing Machine and Von Neumann Architecture
+Universal turing machine is a theoretical concept of a machine that can do everything enabled through software (stored program). An architecture that implements this is Von Neumann Architecture
+#### Component 1: Memory
+- physical perspective: an array of registers
+- logical perspective: store data and instructions. To a computer, their type is indistinguishable.
+- there are 2 variants depending on how the memory is structured:
+   1. data and memory in the same physical memory unit
+   2. they are kept in different memory units, thus have distinct address spaces -> known as the Harvard Architecture
+- side note: Why is RAM (Random Access Memory) called RAM? It means no matter which register you access (irrespective of the memory size and the register's location in it), the access time is the same.  
+#### Component 2: CPU
+- responsible for executing the instructions loaded in memory -> fetch-decode-execute on repeat
+- An instruction specifies (1) what operation to perform, (2) which registers need to be read/write and (3) which instruction needs to be fetch for execution in the next cycle
+- consists of ALU, registers and control unit
+##### ALU
+- what ALU can do depends on the needs budget, energy, cost, etc
+- any function not supported by ALU can be later done in software, but it will be slower
+##### Register
+- fast, efficient processing speed is vital to CPU. Therefore, it is beneficial to store store the intermediate results locally close to the ALU. A typical CPU has a dozens of registers
+##### Control Unit
+- an instruction should be decoded once it is fetched in order to be executed.
+- the decoded info should be used to signal necessary hardware components (ALU, registers, memory) to get the job done
+- 
+### Von Neumann Architecture VS Harvard Architecture
+I did my own research on this topic and left a small notes in Week 4, but the course touched on this topic this time too. I was right in that Hack follows Harward architecture, but they consider it a variant of Von Neumann. 
+
+### Once again, HACK Computer Platform Architecture
+1. CPU: consists of registers to store data and ALU to compute
+2. Memory: 2 partitions; one for data and one for instructions
+3. 
+4. 
+
