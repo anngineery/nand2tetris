@@ -222,14 +222,16 @@ Predefined symbols for a special subset of RAM addresses
 Project: Build a full Hack Computer System that can run Hack assembly language programs (week 4) using components built from week 1-3 
 
 ### Universal Turing Machine and Von Neumann Architecture
-Universal turing machine is a theoretical concept of a machine that can do everything enabled through software (stored program). An architecture that implements this is Von Neumann Architecture
+Universal turing machine is a theoretical concept of a machine that can do everything enabled through software (stored program). An architecture that implements this is Von Neumann Architecture, which is explained extensively below.
+
 #### Component 1: Memory
 - physical perspective: an array of registers
 - logical perspective: store data and instructions. To a computer, their type is indistinguishable.
 - there are 2 variants depending on how the memory is structured:
    1. data and memory in the same physical memory unit
-   2. they are kept in different memory units, thus have distinct address spaces -> known as the Harvard Architecture
+   2. they are kept in different memory units, thus have distinct address spaces -> known as the **Harvard Architecture**
 - side note: Why is RAM (Random Access Memory) called RAM? It means no matter which register you access (irrespective of the memory size and the register's location in it), the access time is the same.  
+
 #### Component 2: CPU
 - responsible for executing the instructions loaded in memory -> fetch-decode-execute on repeat
 - An instruction specifies (1) what operation to perform, (2) which registers need to be read/write and (3) which instruction needs to be fetch for execution in the next cycle
@@ -239,12 +241,25 @@ Universal turing machine is a theoretical concept of a machine that can do every
 - any function not supported by ALU can be later done in software, but it will be slower
 ##### Register
 - fast, efficient processing speed is vital to CPU. Therefore, it is beneficial to store store the intermediate results locally close to the ALU. A typical CPU has a dozens of registers
+- why is it faster than memory access? Only a few of them there, so we only need a few bits to address them. With that, we can do an operation like `someCpuRegister = 0` in 1 instruction as opposed to using 1 instruction just to pass the address and another one to supply the operation instruction
+- registers used in CPU:
+   1. data register: temporary storage for intermediate computation result. Similar to a temp variable in SW
+   2. address register: store memory address to operate on. Output of this register (which represents a memory address) feeds into the addr input of a memory device. But it can also be used as an extra data register
+   3. program counter (PC): keep the address of the next instruction to run
 ##### Control Unit
 - an instruction should be decoded once it is fetched in order to be executed.
 - the decoded info should be used to signal necessary hardware components (ALU, registers, memory) to get the job done
-- 
-### Von Neumann Architecture VS Harvard Architecture
+
+#### Component 3: I/O Devices
+Memory-mapped I/O is an abstraction used to help the computer be device-agnosotic. Each device is allocated a designated area in the memory (the memory map) and looks like a regular memory segment to the CPU
+CPU and I/O device should have an agreed upon rules to follow. The first is that I/O device should be mapped to 1D array of memory structure. So in the case of a screen, which has 2D structure naturally, needs to be flattened. The second is that I/O device needs to provide an interaction protocol so that CPU can access the device. (ex) keyboard - which binary code to use for each key? This is where standards make our lives easier!)
+
+### Challenges with Von Neumann Architecture, and Harvard Architecture
 I did my own research on this topic and left a small notes in Week 4, but the course touched on this topic this time too. I was right in that Hack follows Harward architecture, but they consider it a variant of Von Neumann. 
+
+#### Fetch - Execute Clash
+- Problem: We need to access the next instruction by supplying the address to the memory. But we also need to access the memory to read/write data as per the current instruction. We only have only 1 memory, so we cannot do both at the same time. 
+- Solution: do one after the other. 
 
 ### Once again, HACK Computer Platform Architecture
 1. CPU: consists of registers to store data and ALU to compute
