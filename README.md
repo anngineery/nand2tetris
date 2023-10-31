@@ -236,6 +236,7 @@ Universal turing machine is a theoretical concept of a machine that can do every
 - responsible for executing the instructions loaded in memory -> fetch-decode-execute on repeat
 - An instruction specifies (1) what operation to perform, (2) which registers need to be read/write and (3) which instruction needs to be fetch for execution in the next cycle
 - consists of ALU, registers and control unit
+- 2 different design approaches for performance: (1) Complex Instruction Set Computing (CISC) or (2) Reduced Instruction Set Computing (RISC)
 ##### ALU
 - what ALU can do depends on the needs budget, energy, cost, etc
 - any function not supported by ALU can be later done in software, but it will be slower
@@ -245,25 +246,34 @@ Universal turing machine is a theoretical concept of a machine that can do every
 - registers used in CPU:
    1. data register: temporary storage for intermediate computation result. Similar to a temp variable in SW
    2. address register: store memory address to operate on. Output of this register (which represents a memory address) feeds into the addr input of a memory device. But it can also be used as an extra data register
-   3. program counter (PC): keep the address of the next instruction to run
+   3. program counter (PC): keep the address of the next instruction to run. Although the name says a "register", it is not _just_ a register. It contains muxes to handle different inputs and has more control bits (reset, load and increment) than a regular register. 
 ##### Control Unit
 - an instruction should be decoded once it is fetched in order to be executed.
 - the decoded info should be used to signal necessary hardware components (ALU, registers, memory) to get the job done
 
 #### Component 3: I/O Devices
-Memory-mapped I/O is an abstraction used to help the computer be device-agnosotic. Each device is allocated a designated area in the memory (the memory map) and looks like a regular memory segment to the CPU
-CPU and I/O device should have an agreed upon rules to follow. The first is that I/O device should be mapped to 1D array of memory structure. So in the case of a screen, which has 2D structure naturally, needs to be flattened. The second is that I/O device needs to provide an interaction protocol so that CPU can access the device. (ex) keyboard - which binary code to use for each key? This is where standards make our lives easier!)
+- Memory-mapped I/O is an abstraction used to help the computer be device-agnosotic. Each device is allocated a designated area in the memory (the memory map) and looks like a regular memory segment to the CPU
+- CPU and I/O device should have an agreed upon rules to follow:
+  1. I/O device should be mapped to 1D array of memory structure. So in the case of a screen, which has 2D structure naturally, needs to be flattened
+  2. I/O device needs to provide an interaction protocol so that CPU can access the device. (ex) keyboard - which binary code to use for each key? This is where standards make our lives easier!)
+- In modern computer, we don't write bits to memory directly to control I/O devices. Instead, for example, the CPU sends instructions to a graphics card that controls the screen
 
 ### Challenges with Von Neumann Architecture, and Harvard Architecture
 I did my own research on this topic and left a small notes in Week 4, but the course touched on this topic this time too. I was right in that Hack follows Harward architecture, but they consider it a variant of Von Neumann. 
 
 #### Fetch - Execute Clash
 - Problem: We need to access the next instruction by supplying the address to the memory. But we also need to access the memory to read/write data as per the current instruction. We only have only 1 memory, so we cannot do both at the same time. 
-- Solution: do one after the other. 
+- Solution: do one after the other. During the fetch cycle, give the memory an instruction address. The memory emits the instruction immediately (not clocked; althought ROM is a stack of registers, I can read a value out right away as it only needs combinatorial operation for the MUX) and gets stored in the Instruction Register (IR). In the subsequent cycle, the instruction is decoded, and if data needs to be access from the memory, that is done. (_I didn't understand the mention of IR in this context. Why is it really needed? We have to decode the current instruction first in order to pass in data address to read/write data in the memory, so I do not think the current instruction is gonna get overwritten by anything? I did get the answer I was looking for but the best I could find was copied below_)
+> From the internet: There are architectures where it is not needed, but generally the PC supplies an address, the instruction memory is accessed and the value stored in the IR. Then the instruction is decoded while data and (possibly) additional words of the instruction are fetched. In a Harvard Architecture, there are separate instruction and data memories. So the output of the memory could be decoded directly. If this is a RISC architecture where every instruction was one word, there would be be no need for an IR. If an instruction is more than one word, it would have to be stored someplace (in the IR) while the next word is fetched.
 
-### Once again, HACK Computer Platform Architecture
-1. CPU: consists of registers to store data and ALU to compute
-2. Memory: 2 partitions; one for data and one for instructions
-3. 
-4. 
+- Harvard Architecture also helps with this problem, because of the separate memories for data and instruction so they can be accessed at the same time. It is also good for embedded system [(why?)](https://www.quora.com/Why-do-Arduino-MCUs-use-Harvard-architecture-and-not-Von-Neumann)
+
+Some key terms to google are Harvard Architecture and von Neuman Architecture.
+
+### Something that I often get confused about HACK Computer Platform Architecture
+- 16 bit processor, meaning it has 16-bit register set. Therefore, it takes a 16-bit instruction and data
+- But don't get confused - memory address is *15 bits*. This does have to be 16 bits just because it is a 16-bit computer.
+   - But what if I am using an A instruction with "out-of-scope" memory address? No worries, because the opcode for A instruction (the MSB) is 0.
+- `outM` and `writeM` outputs are combinatorial, `addressM` and `PC` outputs are clocked
+
 
