@@ -1,8 +1,7 @@
 """
-This is an assembler for HACK computer 
+This is an assembler for HACK computer. 
 To focus on the actuall translation part, I assume that
-the assembly file given is perfect and the command input
-always follows the expected format.
+the assembly file given is perfect and follows the expected convention.
 """
 import sys
 from pathlib import Path
@@ -16,6 +15,9 @@ def get_output_file_path(asm_file_path: Path) -> Path:
 
 
 class Parser():
+    """
+    Read .asm file and remove white spaces and comments.
+    """
     def __init__(self, asm_fp: Path):
         self.fp = asm_fp
         self.content_array = []
@@ -50,6 +52,9 @@ class Parser():
 
 
 class Decoder():
+    """
+    Given a line of assembly code, convert it into the equivalent machine code. 
+    """
     comp_mapping = {
         "0": "101010",
         "1": "111111",
@@ -103,18 +108,35 @@ class Decoder():
         "JMP": "111"
     }
 
-    @classmethod
-    def _decode_a_instruction(cls, instruction: str) -> str:
+    def __init__(self):
+        self.symbol_manager = SymbolManager()
+        self.next_instruction_index = 0
+
+    def _decode_a_instruction(self, instruction: str) -> str:
+        """
+        A instruction format: c@positive_integer or @variable_name
+        By convention, variable names cannot start with a digit.
+        """
         prefix = "0"
-        binary_15bits = "{0:015b}".format(int(instruction[1:]))
+
+        try:
+            binary_15bits = "{0:015b}".format(int(instruction[1:]))
+        
+        except ValueError: # what comes after "@" is a char not a digit
+            #import pdb; pdb.set_trace()
+            address = self.symbol_manager.get_address(instruction[1:])
+
+            if address is None:
+                # variable appeared for the first time , so we need to add to the symbol table
+                address = self.symbol_manager.add_entry(instruction[1:])
+            binary_15bits = "{0:015b}".format(address)
 
         return prefix + binary_15bits
 
-    @classmethod
-    def _decode_c_instruction(cls, instruction: str) -> str:
-        # break down into 3 parts (dest = comp; jump) 
-        # remember that dest or jump can be an empty string
-
+    def _decode_c_instruction(self, instruction: str) -> str:
+        """
+        C instruction format: dest (optional) = comp; jump (optional)
+        """
         if "=" in instruction:
             dest, comp_and_jump = instruction.split("=")
         else:
@@ -129,59 +151,104 @@ class Decoder():
 
         prefix = "111"
         a = "1" if "M" in comp else "0"
-        c1_to_c6 = cls.comp_mapping[comp]
-        d1_to_d3 = cls.dest_mapping[dest]
-        j1_to_j3 = cls.jump_mapping[jump]
+        c1_to_c6 = self.comp_mapping[comp]
+        d1_to_d3 = self.dest_mapping[dest]
+        j1_to_j3 = self.jump_mapping[jump]
 
         return prefix + a + c1_to_c6 + d1_to_d3 + j1_to_j3
 
-    @classmethod
-    def decode(cls, instruction:str) -> Optional[str]:
-        if not instruction:
-            return None
+    def decode(self, instruction:str) -> Optional[str]:
+        """
+        A function that decodes an A or C instruction into a machine code.
+        """
+        if instruction and instruction[0] == "@":
+            decoded_instruction = self._decode_a_instruction(instruction)
 
-        if instruction[0] == "@":
-            return cls._decode_a_instruction(instruction)
+        elif instruction and ("=" in instruction or ";" in instruction):
+            decoded_instruction = self._decode_c_instruction(instruction)
+        
+        else: 
+            decoded_instruction = None
 
-        elif instruction[0] == "(" and instruction[-1] == ")":
-            pass
-            # this is label
-        else:
-            return cls._decode_c_instruction(instruction)
+        return decoded_instruction
+    
+    def scan(self, instruction: str):
+        """
+        A function used for scanning the code and getting right addresses for labels.
+        Does not actually generate machine code. Labels are pseudo commands
+        """
+        if instruction and instruction[0] == "(" and instruction[-1] == ")":
+            self.symbol_manager.add_entry(instruction[1:-1], self.next_instruction_index)
+        elif instruction:
+            self.next_instruction_index += 1
 
 
 class SymbolManager():
+    "Manages symbol tables for pre-defined and user-defined symbols"
     def __init__(self):
+        self.next_available_address = 16 # for variables
         # populate pre-defined symbols
         self.mapping_table = {
-            "SP": "0",
-            "LCL": "1",
-            "ARG": "2",
-            "THIS": "3",
-            "THAT": "4",
-            "SCREEN": "16384",
-            "KBD": "24576",
+            "SP": 0,
+            "LCL": 1,
+            "ARG": 2,
+            "THIS": 3,
+            "THAT": 4,
+            "SCREEN": 16384,
+            "KBD": 24576,
         }
+        
+        # add virtual registers R0-R15
+        for i in range(0, 16):
+            self.mapping_table["R"+ str(i)] = i
 
+    def add_entry(self, key: str, value: Optional[int] = None) -> int:
+        if not value:
+            value = self.next_available_address
+            self.next_available_address += 1
+        
+        self.mapping_table[key] = value
 
+        return value
+    
+    def get_address(self, key: str) -> int:
+        return self.mapping_table.get(key)
 
 
 if __name__ == "__main__":
+    """
+    First, extract instructions from .asm file using Parser.
+    Second, go through the sanitized instructions and look for labels only. 
+    Labels take precedence over variables. There could be an A instruction such as `@blahblah` and `blahblah` is not a variable name but label name.
+    Third, now that we know how to match a label to the correct address, translate the instructions.
+    """
     asm_fp = Path(sys.argv[1])
     hack_fp = get_output_file_path(asm_fp)
     parser = Parser(asm_fp)
+    decoder = Decoder()
+    parsed_code_array = []
     machine_code_array = []
 
+    # Get a complete sanitized assembly code
     while parser.has_more_commands():
         asm_code = parser.parse()
-        machine_code = Decoder.decode(asm_code)
+        parsed_code_array.append(asm_code)
+        parser.advance()
 
-        print(f"assembly: {asm_code}, machine_code: {machine_code}")
+    # First pass - getting all the label addresses
+    for parsed_instruction in parsed_code_array:
+        decoder.scan(parsed_instruction)
+
+    # second pass, now that labels are all filled out, actually translate
+    for parsed_instruction in parsed_code_array:
+        machine_code = decoder.decode(parsed_instruction)
+
+        print(f"assembly: {parsed_instruction}, machine_code: {machine_code}")
         
         if machine_code:
             machine_code_array.append(machine_code + "\n")
         
-        parser.advance()
+    print(decoder.symbol_manager.mapping_table)
 
     with open(hack_fp, "w") as output_file:
         output_file.writelines(machine_code_array)
