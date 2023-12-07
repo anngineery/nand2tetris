@@ -1,6 +1,6 @@
 """
 This is an assembler for HACK computer. 
-To focus on the actuall translation part, I assume that
+To focus on the actual translation part, I assume that
 the assembly file given is perfect and follows the expected convention.
 """
 import sys
