@@ -276,4 +276,20 @@ Some key terms to google are Harvard Architecture and von Neuman Architecture.
    - But what if I am using an A instruction with "out-of-scope" memory address? No worries, because the opcode for A instruction (the MSB) is 0.
 - `outM` and `writeM` outputs are combinatorial, `addressM` and `PC` outputs are clocked
 
+## Week 7
+Project: Building a VM translator (part 1 - only includes arithmetic and memory segment access operations)
 
+### High-level Langauges
+- We program in languages like Java, Python, etc. **How does a computer know how to execute these programs?**
+- HLL programers don't need to worry about the answer to this question thanks to the abstraction (assembler, virtual machine, operating system and compiler are all behind the scene)
+
+### Compilers
+- Purpose: Translates HLL programs (src lang) into machine code (dest lang) so computer can run it
+- Problem: As the number of src lang-dest lang combination increases, the # of compilers that need to be written also increases
+   - ex) high-level code cannot be run on computer hardware as is. We have to convert it into machine code, and this task is hardware-dependent (different architecture uses different assembly/machine code model). So if there is 1 high level program that needs to run on 3 different hardware platform, we need 3 *compilers* in total. Say, there are 2 different high-level langauges, then we need 6 compilers and so on. 
+- **2-tier compilation** breaks this coupling
+   -   1st stage: Translate src lang to the intermediate language (only worry about the src lang) -> we still call this a compiler
+   -   2nd stage: Trnaslate the intermediate language to dest lang (only worry about the dest lang) -> VM; someimtes called compiler's backend
+   -   Interface between stage #1 and #2 = intermediate language (aka VM language)
+   - Back to the previous example: now we need 2 translators that convert 2 high-level languages into the intermediate language. Then we need 3 translators to convert the intermediate language to different machine languages. In total, we need 5 translators. Not much difference in this example, but as the number gets larger, it becomes very efficient.
+   - Real life example: Java (bytecode & JVM) --> TODO: insert image here
