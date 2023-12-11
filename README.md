@@ -289,7 +289,36 @@ Project: Building a VM translator (part 1 - only includes arithmetic and memory 
    - ex) high-level code cannot be run on computer hardware as is. We have to convert it into machine code, and this task is hardware-dependent (different architecture uses different assembly/machine code model). So if there is 1 high level program that needs to run on 3 different hardware platform, we need 3 *compilers* in total. Say, there are 2 different high-level langauges, then we need 6 compilers and so on. 
 - **2-tier compilation** breaks this coupling
    -   1st stage: Translate src lang to the intermediate language (only worry about the src lang) -> we still call this a compiler
-   -   2nd stage: Trnaslate the intermediate language to dest lang (only worry about the dest lang) -> VM; someimtes called compiler's backend
+   -   2nd stage: Trnaslate the intermediate language to dest lang (only worry about the dest lang) -> VM; sometimes called compiler's backend
    -   Interface between stage #1 and #2 = intermediate language (aka VM language)
    - Back to the previous example: now we need 2 translators that convert 2 high-level languages into the intermediate language. Then we need 3 translators to convert the intermediate language to different machine languages. In total, we need 5 translators. Not much difference in this example, but as the number gets larger, it becomes very efficient.
    - Real life example: Java (bytecode & JVM) --> TODO: insert image here
+
+### Virtual Machine
+- General definition: An abstract computer that is realized on other computer platform
+- In the context of 2-tier compilation: what runs the intermediate code
+- Ways to implement it
+  1. SW interpreters
+  2. Special-purpose HW
+  3. Translating VM code to machine language of the target platform -> this is what we do!
+
+### Benefits of 2-tier Translation Model
+1. Code transportability: VM is easy enough to implement on multiple target platforms. VM-based software can run on many processors, operating systems without source code change
+2. Code sharing and language interoperability: compilers for different HLL's can share the same VM backend. These languages can call each other's libraries, etc
+
+
+### Stack-based VM
+- Our VM translator will put operands and results of VM operations in a stack
+- What is a stack? An abstract data structure that has 2 possible operations: push & pop (LIFO; always fetch from or push to the top of the stack)
+- How to implement a stack? The easiest way is to have an array called stack + Stack Pointer variable that points to the top of the stack
+  ```
+  push x --> stack[sp] = x; sp++
+  pop    --> sp--; return stack[sp]
+  ```
+### Stack Access VS Memory Access
+| stack         | memory           |
+|:-------------:|:-------------:|
+| reading involves popping an element from the top | reading does not change memory state |
+| only accessible from the top, one at a time | can access anywhere in the memory |  
+| do not lose any value when writing | lose the existing value at the location when writing a new value |
+Why do we use stack as an abstraction of a memory if they are that different?
