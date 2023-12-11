@@ -23,7 +23,7 @@ class MemorySegment (str, Enum):
     THIS = "this"
     THAT = "that"
     TEMP = "temp"
-    # temp, pointer
+    POINTER = "pointer"
     # static
 
 
@@ -262,12 +262,12 @@ class CodeWriter():
         command = command.lower()
         segment = segment.lower()
         segment_name_to_symbol_mapping = {
-            MemorySegment.LOCAL: "LCL",
-            MemorySegment.ARG: "ARG",
-            MemorySegment.THIS: "THIS",
-            MemorySegment.THAT: "THAT",
-            MemorySegment.TEMP: "R5",
-            # MemorySegment.POINTER: "THIS"
+            MemorySegment.LOCAL: ("LCL", "M"),
+            MemorySegment.ARG: ("ARG", "M"),
+            MemorySegment.THIS: ("THIS", "M"),
+            MemorySegment.THAT: ("THAT", "M"),
+            MemorySegment.TEMP: ("R5", "A"),
+            MemorySegment.POINTER: ("THIS", "A"),
         }
         # pointer segment is mapped on RAM 3-4
         # temp location 5-12
@@ -286,12 +286,13 @@ class CodeWriter():
                     M = M + 1   // increment SP"""
             
             elif isinstance(MemorySegment(segment), MemorySegment):
-                register = "A" if MemorySegment(segment) == MemorySegment.TEMP else "M"
+                base_addr_symbol = segment_name_to_symbol_mapping[segment][0]
+                register = segment_name_to_symbol_mapping[segment][1]
                 output = f"""\
                     @{index}
                     D = A
 
-                    @{segment_name_to_symbol_mapping[segment]}
+                    @{base_addr_symbol}
                     A = D + {register} // compute the base addr + index, aka target addr
                     D = M      // get the target val
 
@@ -306,12 +307,13 @@ class CodeWriter():
         elif command == "pop":
             # NOTE: constant segment never gets popped, so exclude it
             if isinstance(MemorySegment(segment), MemorySegment):
-                register = "A" if MemorySegment(segment) == MemorySegment.TEMP else "M"
+                base_addr_symbol = segment_name_to_symbol_mapping[segment][0]
+                register = segment_name_to_symbol_mapping[segment][1]
                 output = f"""\
                     @{index}
                     D = A
 
-                    @{segment_name_to_symbol_mapping[segment]}
+                    @{base_addr_symbol}
                     D =  D + {register}  // compute the target addr
 
                     @SP
