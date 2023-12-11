@@ -24,7 +24,7 @@ class MemorySegment (str, Enum):
     THAT = "that"
     TEMP = "temp"
     POINTER = "pointer"
-    # static
+    STATIC = "static"
 
 
 class Parser():
@@ -268,6 +268,7 @@ class CodeWriter():
             MemorySegment.THAT: ("THAT", "M"),
             MemorySegment.TEMP: ("R5", "A"),
             MemorySegment.POINTER: ("THIS", "A"),
+            MemorySegment.STATIC: (f"{self.output_file.stem}.{index}", None)
         }
         # pointer segment is mapped on RAM 3-4
         # temp location 5-12
@@ -284,8 +285,21 @@ class CodeWriter():
 
                     @SP
                     M = M + 1   // increment SP"""
+                
+            elif segment == MemorySegment.STATIC:
+                label_name = segment_name_to_symbol_mapping[segment][0]
+                output = f"""\
+                    @{label_name}
+                    D = M
+
+                    @SP
+                    A = M
+                    M = D   // insert the constant
+
+                    @SP
+                    M = M + 1   // increment SP"""
             
-            elif isinstance(MemorySegment(segment), MemorySegment):
+            else:
                 base_addr_symbol = segment_name_to_symbol_mapping[segment][0]
                 register = segment_name_to_symbol_mapping[segment][1]
                 output = f"""\
@@ -301,12 +315,20 @@ class CodeWriter():
                     A = M - 1
                     M = D      // place the value where SP was originally pointing at"""
 
-            else:
-                raise NotImplementedError
-
         elif command == "pop":
             # NOTE: constant segment never gets popped, so exclude it
-            if isinstance(MemorySegment(segment), MemorySegment):
+            if segment == MemorySegment.STATIC:
+                label_name = segment_name_to_symbol_mapping[segment][0]
+                output = f"""\
+                    @SP
+                    M = M - 1   // decrement the pointer
+                    A = M
+                    D = M
+
+                    @{label_name}
+                    M = D                    
+                    """
+            else:
                 base_addr_symbol = segment_name_to_symbol_mapping[segment][0]
                 register = segment_name_to_symbol_mapping[segment][1]
                 output = f"""\
@@ -328,9 +350,6 @@ class CodeWriter():
                     A = A + 1
                     A = M
                     M = D"""
-
-            else:
-                raise NotImplementedError
 
         return output
     
