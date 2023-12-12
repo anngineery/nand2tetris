@@ -292,7 +292,7 @@ Project: Building a VM translator (part 1 - only includes arithmetic and memory 
    -   2nd stage: Trnaslate the intermediate language to dest lang (only worry about the dest lang) -> VM; sometimes called compiler's backend
    -   Interface between stage #1 and #2 = intermediate language (aka VM language)
    - Back to the previous example: now we need 2 translators that convert 2 high-level languages into the intermediate language. Then we need 3 translators to convert the intermediate language to different machine languages. In total, we need 5 translators. Not much difference in this example, but as the number gets larger, it becomes very efficient.
-   - Real life example: Java (bytecode & JVM) --> TODO: insert image here
+   - Real life example: Java (bytecode & JVM) ![diagram](2-tier-compilation.JPEG)
 
 ### Virtual Machine
 - General definition: An abstract computer that is realized on other computer platform
