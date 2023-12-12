@@ -315,10 +315,33 @@ Project: Building a VM translator (part 1 - only includes arithmetic and memory 
   push x --> stack[sp] = x; sp++
   pop    --> sp--; return stack[sp]
   ```
+- A surprising thing is that any arithmetic operation or boolean evaluation can be expressed in a sequence of operations on stack
+   - push operands to the stack
+   - pop them
+   - do the operation
+   - push the result to the stack
+  
 ### Stack Access VS Memory Access
 | stack         | memory           |
 |:-------------:|:-------------:|
 | reading involves popping an element from the top | reading does not change memory state |
 | only accessible from the top, one at a time | can access anywhere in the memory |  
 | do not lose any value when writing | lose the existing value at the location when writing a new value |
+
 Why do we use stack as an abstraction of a memory if they are that different?
+
+### Our VM Specification
+- stack-based
+- function-based (a program consists of functions and each function has its stand-alone code and is separately handled)
+- supported data types: 16 bits. can be int, bool, pointers
+- 4 types of commands:
+  1. arithmetic
+  2. memory access
+  3. program flow
+  4. function calling
+ 
+#### Arithmetic Commands
+#### Memory Access Commands
+
+
+
