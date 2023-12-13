@@ -288,11 +288,12 @@ Project: Building a VM translator (part 1 - only handles arithmetic and memory s
 - Problem: As the number of src lang-dest lang combination increases, the # of compilers that need to be written also increases
    - ex) high-level code cannot be run on computer hardware as is. We have to convert it into machine code, and this task is hardware-dependent (different architecture uses different assembly/machine code model). So if there is 1 high level program that needs to run on 3 different hardware platform, we need 3 *compilers* in total. Say, there are 2 different high-level langauges, then we need 6 compilers and so on. 
 - **2-tier compilation** breaks this coupling
+   -   The idea of this started back in 1970s with the Pascal compiler that generated P-Code as the intermediate language   
    -   1st stage: Translate src lang to the intermediate language (only worry about the src lang) -> we still call this a compiler
    -   2nd stage: Trnaslate the intermediate language to dest lang (only worry about the dest lang) -> VM; sometimes called compiler's backend
    -   Interface between stage #1 and #2 = intermediate language (aka VM language)
    - Back to the previous example: now we need 2 translators that convert 2 high-level languages into the intermediate language. Then we need 3 translators to convert the intermediate language to different machine languages. In total, we need 5 translators. Not much difference in this example, but as the number gets larger, it becomes very efficient.
-   - Real life example: Java (bytecode & JVM) ![diagram](2-tier-compilation.JPEG)
+   - Real life example: Java (bytecode & JVM). In order to execute bytecode programs, the client computers should have suitable JVM implementations ![diagram](2-tier-compilation.JPEG)
 
 ### Virtual Machine
 - General definition: An abstract computer that is realized on other computer platform
