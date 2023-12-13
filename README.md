@@ -359,16 +359,14 @@ type 3: command arg1 arg2
 1. how to map VM data structures (in our case, stack and memory segments?) using the host HW platform -> In other words, how to emulate the VM world on the target platform
    - our standard mapping looks as follows (we kinda touched on in back in Week 4):
    - Recall that our RAM is 32k 16-bit word data memory
-   -    virtual registers: RAM[0]-RAM[15]
-      -    RAM[0] = SP
-      -    predefined pointers (SP, LCL, THIS, THAT, ARG) = RAM[0]-RAM[4]
-   -    stack = RAM[256]-RAM[2047]
-   -    heap = RAM[2048]-RAM[16483]
-   -    memory-mapped I/O = RAM[16384]-RAM[24575]
-      - screen: starting RAM[16384]
-      - keyboard: RAM[24576]
-
-   -    user variables are assigned starting RAM[16]
-2. how to express VM commands using the host machine language (in our case, HACK language)
-
-
+      -    virtual registers: RAM[0]-RAM[15]
+            -    RAM[0] = SP
+            -    predefined pointers (SP, LCL, THIS, THAT, ARG) = RAM[0]-RAM[4]
+      -    user variables (static variables): RAM[16]-RAM[255]
+      -    stack = RAM[256]-RAM[2047]
+      -    heap = RAM[2048]-RAM[16483]
+      -    memory-mapped I/O = RAM[16384]-RAM[24576]
+            -    screen: starting RAM[16384]
+            -    keyboard: RAM[24576]
+      -    remaining: ?
+2. how to express VM commands using the host machine language (in our case, HACK assembly language)
