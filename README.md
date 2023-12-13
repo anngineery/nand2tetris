@@ -277,7 +277,7 @@ Some key terms to google are Harvard Architecture and von Neuman Architecture.
 - `outM` and `writeM` outputs are combinatorial, `addressM` and `PC` outputs are clocked
 
 ## Week 7
-Project: Building a VM translator (part 1 - only includes arithmetic and memory segment access operations)
+Project: Building a VM translator (part 1 - only handles arithmetic and memory segment access operations)
 
 ### High-level Langauges
 - We program in languages like Java, Python, etc. **How does a computer know how to execute these programs?**
@@ -334,14 +334,41 @@ Why do we use stack as an abstraction of a memory if they are that different?
 - stack-based
 - function-based (a program consists of functions and each function has its stand-alone code and is separately handled)
 - supported data types: 16 bits. can be int, bool, pointers
+- manages 2 implicit data structures and VM commands change their states
+   - stack: working memory of VM operations; push/pop always involves the stack
+   - heap: dedicated RAM area for storing objects and arrays
 - 4 types of commands:
   1. arithmetic
   2. memory access
-  3. program flow
-  4. function calling
+  3. program flow *(Week 8)*
+  4. function calling *(Week 8)*
  
 #### Arithmetic Commands
+- syntax:
+```
+type 1: command
+type 2: command arg1
+type 3: command arg1 arg2
+```
 #### Memory Access Commands
+- stack machine is equipped with 8 segments: constant, local, argument, this, that, temp, pointer, static
+- this is how we let go of symbolic variables (variable names in HLL)
+- syntax: `push/pop segment_name index`
 
+### Things to Consider for VM Implementation
+1. how to map VM data structures (in our case, stack and memory segments?) using the host HW platform -> In other words, how to emulate the VM world on the target platform
+   - our standard mapping looks as follows (we kinda touched on in back in Week 4):
+   - Recall that our RAM is 32k 16-bit word data memory
+   -    virtual registers: RAM[0]-RAM[15]
+      -    RAM[0] = SP
+      -    predefined pointers (SP, LCL, THIS, THAT, ARG) = RAM[0]-RAM[4]
+   -    stack = RAM[256]-RAM[2047]
+   -    heap = RAM[2048]-RAM[16483]
+   -    memory-mapped I/O = RAM[16384]-RAM[24575]
+      - screen: starting RAM[16384]
+      - keyboard: RAM[24576]
+
+   -    user variables are assigned starting RAM[16]
+2. how to express VM commands using the host machine language (in our case, HACK language)
 
 
