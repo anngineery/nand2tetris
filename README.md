@@ -294,6 +294,8 @@ Project: Building a VM translator (part 1 - only handles arithmetic and memory s
    -   Interface between stage #1 and #2 = intermediate language (aka VM language)
    - Back to the previous example: now we need 2 translators that convert 2 high-level languages into the intermediate language. Then we need 3 translators to convert the intermediate language to different machine languages. In total, we need 5 translators. Not much difference in this example, but as the number gets larger, it becomes very efficient.
    - Real life example: Java (bytecode & JVM). In order to execute bytecode programs, the client computers should have suitable JVM implementations ![diagram](2-tier-compilation.JPEG)
+     Microsoft .NET infrastructure & Common Language Runtime(CLR) ![diagram2](clr.JPEG)
+     
 
 ### Virtual Machine
 - General definition: An abstract computer that is realized on other computer platform
@@ -306,7 +308,6 @@ Project: Building a VM translator (part 1 - only handles arithmetic and memory s
 ### Benefits of 2-tier Translation Model
 1. Code transportability: VM is easy enough to implement on multiple target platforms. VM-based software can run on many processors, operating systems without source code change
 2. Code sharing and language interoperability: compilers for different HLL's can share the same VM backend. These languages can call each other's libraries, etc
-
 
 ### Stack-based VM
 - Our VM translator will put operands and results of VM operations in a stack
