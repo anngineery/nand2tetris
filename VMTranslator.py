@@ -383,14 +383,33 @@ class CodeWriter():
             output_file.writelines(self.translated_commands)
 
 if __name__ == "__main__":
+    """
+    If the input is a single .vm file, the output should be the same name with .hack extension.
+    If the input is a directory, each .vm file in the directory should have a Parser but one Codewriter module.
+    The output should be one aggregated file called <directory_name>.hack.
+    """
     vm_fp = Path(sys.argv[1])
     asm_fp = get_output_file_path(vm_fp)
-    parser = Parser(vm_fp)
     code_writer = CodeWriter(asm_fp)
 
-    while parser.has_more_commands():
-        command = parser.get_command()
-        code_writer.translate(command)
-        parser.advance()
+    if vm_fp.is_dir():
+        for child in vm_fp.iterdir():
+            if ".vm" in child.name: # only care about .vm files 
+                parser = Parser(vm_fp)
+                
+                while parser.has_more_commands():
+                    command = parser.get_command()
+                    code_writer.translate(command)
+                    parser.advance()
+        
+        code_writer.write()
 
-    code_writer.write()
+    else:
+        parser = Parser(vm_fp)
+
+        while parser.has_more_commands():
+            command = parser.get_command()
+            code_writer.translate(command)
+            parser.advance()
+
+        code_writer.write()
