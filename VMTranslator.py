@@ -390,26 +390,23 @@ if __name__ == "__main__":
     """
     vm_fp = Path(sys.argv[1])
     asm_fp = get_output_file_path(vm_fp)
+    files_to_translate = []
     code_writer = CodeWriter(asm_fp)
 
     if vm_fp.is_dir():
         for child in vm_fp.iterdir():
             if ".vm" in child.name: # only care about .vm files 
-                parser = Parser(vm_fp)
-                
-                while parser.has_more_commands():
-                    command = parser.get_command()
-                    code_writer.translate(command)
-                    parser.advance()
-        
-        code_writer.write()
+                files_to_translate.append(vm_fp)
 
     else:
-        parser = Parser(vm_fp)
+        files_to_translate.append(vm_fp)
+
+    for vm_file in files_to_translate:
+        parser = Parser(vm_file)
 
         while parser.has_more_commands():
             command = parser.get_command()
             code_writer.translate(command)
             parser.advance()
 
-        code_writer.write()
+    code_writer.write()
