@@ -353,6 +353,29 @@ class CodeWriter():
 
         return output
     
+    def _write_program_flow(self, command: str, lable: str) -> str:
+        if command == "label":
+            output = f"""\
+                ({lable})"""
+
+        elif command == "goto": # unconditional jump
+            output = f"""\
+                @{lable}
+                0;JMP"""
+            
+        elif command == "if-goto":  # conditional jump
+            # pop an entry from the stack and use that for evaluation
+            output = f"""\
+                @SP
+                M = M - 1
+                A = M
+                D = M
+
+                @{lable}
+                D;JNE"""
+
+        return output
+
     def translate(self, command: Optional[List[str]]):
         if command is None:
             return  # no-op
@@ -365,6 +388,9 @@ class CodeWriter():
             arg1 = command[1]
             arg2 = command[2]
             translated_command = self._write_memory_access(keyword, arg1, arg2)
+        elif keyword in ["label", "goto", "if-goto"]:
+            arg1 = command[1]
+            translated_command = self._write_program_flow(keyword, arg1)
         else:
             raise NotImplementedError("more to come in the next project")
         
