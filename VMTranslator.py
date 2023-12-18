@@ -85,6 +85,9 @@ class CodeWriter():
         self.unique_label_index = 0 # TODO: I have to increment this somewhere. currently not doing it
 
     def _write_arithmetic(self, command:str) -> str:
+        """
+        Operands are popped from the stack and the result is pushed to the stack.
+        """
         if command == "add":
             # what to do: pop 2 top-most entries, add and push again
             # current sp - 1 is where the top operand is
@@ -258,6 +261,24 @@ class CodeWriter():
         return output
 
     def _write_memory_access(self, command:str, segment: str, index: str) -> str:
+        """
+        local, argument, this and that segments: 
+            base addresses are stored in LCL, ARG, THIS and THAT registers respectively 
+            (aka those are pointer registers containing memory address).
+        pointer, temp segments: 
+            mapped directly onto a fixed area in the RAM. 
+                pointer = RAM[3-4], temp = RAM[5-12]
+        constant segment: 
+            it is a 'virtual' segment that doesn't really exist, meaning it doesn't occupy
+            any space in the RAM.
+        static segment:
+            store static variables shared by all functions in the same .vm file.
+            takes up RAM[16~]. Since the HACK assembler allocates newly encountered variables
+            starting RAM[16], we are gonna leverage this property. For example,
+                push static 3 --> @file_name.3 
+                                  D = M
+
+        """
         output = None
         command = command.lower()
         segment = segment.lower()
@@ -354,6 +375,9 @@ class CodeWriter():
         return output
     
     def _write_program_flow(self, command: str, label: str) -> str:
+        """
+        Handle branching operations required for if-statements and loops.
+        """
         label = label.upper()
 
         if command == "label":
@@ -379,6 +403,10 @@ class CodeWriter():
         return output
 
     def _write_function_calling(self, command: str, func_name: Optional[str]=None, arg_num: Optional[str]=None) -> str:
+        """
+        Handle a function calling another. 
+        TODO: more detailed comments 
+        """
         func_name = func_name.upper() if func_name else func_name
 
         if command == "function":
