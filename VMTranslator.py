@@ -143,7 +143,7 @@ class CodeWriter():
                 AM = M - 1   // decrement sp, and get the bottom operand   
                 D = M - D    // bottom - top
 
-                @eq_{self.unique_label_index}
+                @EQ_{self.unique_label_index}
                 D; JEQ
 
                 @SP         // 'not equal' portion
@@ -151,16 +151,16 @@ class CodeWriter():
                 A = M - 1   // insert the result to where SP used to point at
                 M = 0       // false is 0
 
-                @next_{self.unique_label_index}
+                @NEXT_{self.unique_label_index}
                 0; JMP
 
-                (eq_{self.unique_label_index})
+                (EQ_{self.unique_label_index})
                 @SP         
                 M = M + 1   // Increment the SP (ahead of time)
                 A = M - 1   // insert the result to where SP used to point at
                 M = -1      // true is -1
 
-                (next_{self.unique_label_index}) // so that when not equal, we can skip over (eq_{self.unique_label_index})"""
+                (NEXT_{self.unique_label_index}) // so that when not equal, we can skip over (EQ_{self.unique_label_index})"""
 
         elif command == "gt":
             # bottom - top > 0 
@@ -173,7 +173,7 @@ class CodeWriter():
                 AM = M - 1   // decrement sp, and get the bottom operand   
                 D = M - D    // bottom - top
 
-                @gt_{self.unique_label_index}
+                @GT_{self.unique_label_index}
                 D; JGT
 
                 @SP         // 'not greater than' portion
@@ -181,16 +181,16 @@ class CodeWriter():
                 A = M - 1   // insert the result to where SP used to point at
                 M = 0       // false is 0
 
-                @next_{self.unique_label_index}
+                @NEXT_{self.unique_label_index}
                 0; JMP
 
-                (gt_{self.unique_label_index})
+                (GT_{self.unique_label_index})
                 @SP         
                 M = M + 1   // Increment the SP (ahead of time)
                 A = M - 1   // insert the result to where SP used to point at
                 M = -1      // true is -1
 
-                (next_{self.unique_label_index}) // so that when not equal, we can skip over (eq_{self.unique_label_index})"""
+                (NEXT_{self.unique_label_index}) // so that when not equal, we can skip over (EQ_{self.unique_label_index})"""
 
         elif command == "lt": 
             # bottom - top < 0 
@@ -203,7 +203,7 @@ class CodeWriter():
                 AM = M - 1   // decrement sp, and get the bottom operand   
                 D = M - D    // bottom - top
 
-                @lt_{self.unique_label_index}
+                @LT_{self.unique_label_index}
                 D; JLT
 
                 @SP         // 'not less than' portion
@@ -211,16 +211,16 @@ class CodeWriter():
                 A = M - 1   // insert the result to where SP used to point at
                 M = 0       // false is 0
 
-                @next_{self.unique_label_index}
+                @NEXT_{self.unique_label_index}
                 0; JMP
 
-                (lt_{self.unique_label_index})
+                (LT_{self.unique_label_index})
                 @SP         
                 M = M + 1   // Increment the SP (ahead of time)
                 A = M - 1   // insert the result to where SP used to point at
                 M = -1      // true is -1
 
-                (next_{self.unique_label_index}) // so that when not equal, we can skip over (eq_{self.unique_label_index})"""
+                (NEXT_{self.unique_label_index}) // so that when not equal, we can skip over (EQ_{self.unique_label_index})"""
 
         elif command == "and":
             output = """\
@@ -415,11 +415,11 @@ class CodeWriter():
                 @i
                 MD = 0
 
-                (INIT_LCL_{func_name})
+                ({func_name}$INIT_LCL)
                 @{arg_num}
                 D = D - A   // D = i - arg_num
 
-                @END_{func_name}
+                @{func_name}$END_LCL
                 D; JGE
 
                 @SP
@@ -430,10 +430,10 @@ class CodeWriter():
                 @i
                 MD = M + 1
 
-                @INIT_LCL_{func_name}
+                @{func_name}$INIT_LCL
                 0; JMP
 
-                (END_{func_name})"""
+                ({func_name}$END_LCL)"""
             
         elif command == "call":
             pass
