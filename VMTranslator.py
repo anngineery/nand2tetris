@@ -353,14 +353,16 @@ class CodeWriter():
 
         return output
     
-    def _write_program_flow(self, command: str, lable: str) -> str:
+    def _write_program_flow(self, command: str, label: str) -> str:
+        label = label.upper()
+
         if command == "label":
             output = f"""\
-                ({lable})"""
+                ({label})"""
 
         elif command == "goto": # unconditional jump
             output = f"""\
-                @{lable}
+                @{label}
                 0;JMP"""
             
         elif command == "if-goto":  # conditional jump
@@ -371,8 +373,89 @@ class CodeWriter():
                 A = M
                 D = M
 
-                @{lable}
+                @{label}
                 D;JNE"""
+
+        return output
+
+    def _write_function_calling(self, command: str, func_name: Optional[str]=None, arg_num: Optional[str]=None) -> str:
+        func_name = func_name.upper() if func_name else func_name
+
+        if command == "function":
+            output = f"""\
+                ({func_name})
+                @i
+                MD = 0
+
+                (INIT_LCL_{func_name})
+                @{arg_num}
+                D = D - A   // D = i - arg_num
+
+                @END_{func_name}
+                D; JGE
+
+                @SP
+                M = M + 1   // increment SP ahead of time
+                A = M - 1
+                M = 0   // init to zero
+
+                @i
+                MD = M + 1
+
+                @INIT_LCL_{func_name}
+                0; JMP
+
+                (END_{func_name})"""
+            
+        elif command == "call":
+            pass
+
+        elif command == "return":
+            output = """\
+                @LCL
+                D = M
+
+                @frame 
+                M = D   // frame = LCL
+                AM = M - 1  // trick: decrement the frame pointer var
+                D = M   // D = *(frame - 1)
+                @THAT
+                M = D
+
+                @frame 
+                AM = M - 1  // trick: decrement frame again
+                D = M   // D = *(frame - 2)
+                @THIS
+                M = D
+
+                @SP
+                A = M - 1 
+                D = M       // D = pop value
+                @ARG
+                A = M
+                M = D       // *ARG = pop()
+
+                @ARG
+                D = M + 1
+                @SP
+                M = D   // SP = ARG + 1
+                
+                @frame 
+                AM = M - 1  // trick: decrement frame again
+                D = M   // D = *(frame - 3)
+                @ARG
+                M = D
+
+                @frame 
+                AM = M - 1  // trick: decrement frame again
+                D = M   // D = *(frame - 4)
+                @LCL
+                M = D
+
+                @frame 
+                A = M - 1
+                A = M   // A = *(frame - 5) = return address
+                0; JMP"""
 
         return output
 
@@ -391,6 +474,12 @@ class CodeWriter():
         elif keyword in ["label", "goto", "if-goto"]:
             arg1 = command[1]
             translated_command = self._write_program_flow(keyword, arg1)
+        elif keyword in ["function", "call"]:
+            arg1 = command[1]
+            arg2 = command[2]
+            translated_command = self._write_function_calling(keyword, arg1, arg2)
+        elif keyword ==  "return":
+            translated_command = self._write_function_calling(keyword)
         else:
             raise NotImplementedError("more to come in the next project")
         
@@ -399,8 +488,8 @@ class CodeWriter():
 
     def write(self):
         infinite_loop = """\
-            (infinite_loop)
-            @infinite_loop
+            (INF_LOOP)
+            @INF_LOOP
             0; JMP"""
         
         self.translated_commands.append(dedent(infinite_loop))
