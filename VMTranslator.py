@@ -9,11 +9,30 @@ from typing import Optional, List
 from enum import Enum
 from textwrap import dedent
 
+#### -- functions to be used by the orchestrator (main) -- ###
 def get_output_file_path(asm_file_path: Path) -> Path:
     """
     Just change the input parameter extension from .vm to .asm
     """
-    return asm_file_path.with_suffix(".asm")
+    if asm_file_path.is_dir():
+        file_name = asm_file_path.stem + ".asm"
+        return asm_file_path.joinpath(file_name)
+
+    else:
+        return asm_file_path.with_suffix(".asm")
+    
+def get_vm_files(vm_file_path: Path) -> List[Path]:
+    vm_files = []
+
+    if vm_file_path.is_dir():
+        for child in vm_fp.iterdir():
+            if ".vm" in child.name:
+                vm_files.append(child)
+    else:
+        vm_files.append(vm_file_path)
+
+    return vm_files
+#### ----------------------------------------------------- ###
 
 
 class MemorySegment (str, Enum):
@@ -273,8 +292,9 @@ class CodeWriter():
             any space in the RAM.
         static segment:
             store static variables shared by all functions in the same .vm file.
-            takes up RAM[16~]. Since the HACK assembler allocates newly encountered variables
-            starting RAM[16], we are gonna leverage this property. For example,
+            takes up RAM[16~255] before the stack starts at RAM[256]. 
+            Since the HACK assembler allocates newly encountered variables starting RAM[16], 
+            we are gonna leverage this property. For example,
                 push static 3 --> @file_name.3 
                                   D = M
 
@@ -436,7 +456,61 @@ class CodeWriter():
                 ({func_name}$END_LCL)"""
             
         elif command == "call":
-            pass
+            output = f"""\
+                @RET_FROM_{func_name}_{self.unique_label_index}
+                D = M
+                @SP
+                M = M + 1   // increment SP ahead of time
+                A = M - 1
+                M = D   // push return address
+
+                @LCL
+                D = M
+                @SP
+                M = M + 1   // increment SP ahead of time
+                A = M - 1
+                M = D   // save LCL
+
+                @ARG
+                D = M
+                @SP
+                M = M + 1   // increment SP ahead of time
+                A = M - 1
+                M = D   // save ARG
+                
+                @THIS
+                D = M
+                @SP
+                M = M + 1   // increment SP ahead of time
+                A = M - 1
+                M = D   //save THIS
+
+                @THAT
+                D = M
+                @SP
+                M = M + 1   // increment SP ahead of time
+                A = M - 1
+                M = D   //save THAT
+
+                @SP
+                D = M
+                @LCL
+                M = D   // LCL = SP
+                @ARG
+                M = D   // ARG = SP
+                @5 
+                D = A
+                @{arg_num}
+                D = D + A   // D = 5 + arg_num
+                @ARG
+                M = M - D   // ARG = SP - (5 + arg_num)
+
+                @{func_name}
+                0; JMP
+
+                (RET_FROM_{func_name}_{self.unique_label_index})"""
+            
+            self.unique_label_index += 1
 
         elif command == "return":
             output = """\
@@ -512,18 +586,44 @@ class CodeWriter():
             raise NotImplementedError("more to come in the next project")
         
         self.unique_label_index += 1
-        self.translated_commands.append(dedent(translated_command) + "\n\n")
+        self.translated_commands.append(translated_command + "\n\n")
 
     def write(self):
+        """
+        Bootstrap code = placed in ROM[0~] -> because we designed HACK platform in such a way that
+        when it boots up (upon reset) it starts executing from ROM[0]. But we do not handle placing the
+        code in ROM, so it only means that this bootstrap code should be generated at the very beginning of the .asm file
+        1. Initialize VM stack: starts at RAM[256]
+        2. first VM function that starts executing is Sys.init (argumentless)
+        """        
+        bootstrap_init = """\
+            // initialize pointer registers
+            @256
+            D = A
+            @SP
+            M = D
+            @LCL
+            M = -1
+            @ARG
+            M = -1
+            @THIS
+            M = -1
+            @THAT
+            M = -1"""
+        bootstrap_call_sys_init = self._write_function_calling("call", "Sys.init", "0")
         infinite_loop = """\
             (INF_LOOP)
             @INF_LOOP
             0; JMP"""
-        
-        self.translated_commands.append(dedent(infinite_loop))
 
         with open(self.output_file, "w") as output_file:
-            output_file.writelines(self.translated_commands)
+            output_file.write(dedent(bootstrap_init + "\n\n"))
+            output_file.write(dedent(bootstrap_call_sys_init + "\n\n"))
+
+            for translated_commands in self.translated_commands:
+                output_file.write(dedent(translated_commands))
+
+            output_file.write(dedent(infinite_loop))
 
 if __name__ == "__main__":
     """
@@ -532,17 +632,9 @@ if __name__ == "__main__":
     The output should be one aggregated file called <directory_name>.hack.
     """
     vm_fp = Path(sys.argv[1])
+    files_to_translate = get_vm_files(vm_fp)
     asm_fp = get_output_file_path(vm_fp)
-    files_to_translate = []
     code_writer = CodeWriter(asm_fp)
-
-    if vm_fp.is_dir():
-        for child in vm_fp.iterdir():
-            if ".vm" in child.name: # only care about .vm files 
-                files_to_translate.append(child)
-
-    else:
-        files_to_translate.append(vm_fp)
 
     for vm_file in files_to_translate:
         parser = Parser(vm_file)
@@ -553,3 +645,5 @@ if __name__ == "__main__":
             parser.advance()
 
     code_writer.write()
+
+
