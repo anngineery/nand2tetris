@@ -511,7 +511,7 @@ if __name__ == "__main__":
     if vm_fp.is_dir():
         for child in vm_fp.iterdir():
             if ".vm" in child.name: # only care about .vm files 
-                files_to_translate.append(vm_fp)
+                files_to_translate.append(child)
 
     else:
         files_to_translate.append(vm_fp)
