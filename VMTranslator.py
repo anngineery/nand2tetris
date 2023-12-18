@@ -118,7 +118,7 @@ class CodeWriter():
 
                 @SP
                 AM = M - 1   // decrement sp, and get the bottom operand   
-                D = M + D    // add two operands 
+                D = D + M    // add two operands 
 
                 @SP
                 M = M + 1   // Increment the SP (ahead of time)
