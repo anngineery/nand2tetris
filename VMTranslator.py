@@ -12,7 +12,8 @@ from textwrap import dedent
 #### -- functions to be used by the orchestrator (main) -- ###
 def get_output_file_path(asm_file_path: Path) -> Path:
     """
-    Just change the input parameter extension from .vm to .asm
+    If the file path is a directory, then the output file should be <directory_name>.asm.
+    If it's a file, then same name with .asm extension
     """
     if asm_file_path.is_dir():
         file_name = asm_file_path.stem + ".asm"
@@ -104,8 +105,6 @@ class CodeWriter():
         self.unique_label_index = 0 # TODO: I have to increment this somewhere. currently not doing it
         self.current_vm_file = None
 
-        self.translated_commands.append(self._write_bootstrap_code())
-
     def set_file_name(self, file_name: str):
         """
         Informs the Code Writer that the tranlsation of has started. Necessary for handling static segments across multiple files.
@@ -113,13 +112,13 @@ class CodeWriter():
         """
         self.current_vm_file = file_name
 
-    def _write_bootstrap_code(self) -> str:
+    def add_bootstrap_code(self):
         """
         Bootstrap code = placed in ROM[0~] -> because we designed HACK platform in such a way that
         when it boots up (upon reset) it starts executing from ROM[0]. But we do not handle placing the
-        code in ROM, so it only means that this bootstrap code should be generated at the very beginning of the .asm file
+        code in ROM, so it only means that this bootstrap code should be generated at the very beginning of the .asm file.
         1. Initialize VM stack
-        2. first VM function that starts executing is Sys.init (argumentless)
+        2. first VM function that starts executing should be Sys.init (argumentless)
         """        
         bootstrap_init = """\
             // initialize pointer registers
@@ -141,7 +140,9 @@ class CodeWriter():
             @INF_LOOP
             0; JMP"""
         
-        return bootstrap_init + "\n" + bootstrap_call_sys_init + "\n" + infinite_loop
+        self.translated_commands.append(bootstrap_init)
+        self.translated_commands.append(bootstrap_call_sys_init)
+        self.translated_commands.append(infinite_loop)
 
     def _write_arithmetic(self, command:str) -> str:
         """
@@ -337,7 +338,6 @@ class CodeWriter():
             we are gonna leverage this property. For example,
                 push static 3 --> @file_name.3 
                                   D = M
-
         """
         output = None
         command = command.lower()
@@ -351,8 +351,6 @@ class CodeWriter():
             MemorySegment.POINTER: ("THIS", "A"),
             MemorySegment.STATIC: (f"{self.current_vm_file.stem}.{index}", None)
         }
-        # pointer segment is mapped on RAM 3-4
-        # temp location 5-12
         
         if command == "push":
             if segment == MemorySegment.CONSTANT:
@@ -451,6 +449,7 @@ class CodeWriter():
             
         elif command == "if-goto":  # conditional jump
             # pop an entry from the stack and use that for evaluation
+            # if the value is NOT zero, then go to the label.
             output = f"""\
                 @SP
                 M = M - 1
@@ -465,11 +464,11 @@ class CodeWriter():
     def _write_function_calling(self, command: str, func_name: Optional[str]=None, arg_num: Optional[str]=None) -> str:
         """
         Handle a function calling another. 
-        TODO: more detailed comments 
         """
         func_name = func_name.upper() if func_name else func_name
 
         if command == "function":
+            # mark the function entry and initialize local variables to zero
             output = f"""\
                 ({func_name})
                 @i
@@ -496,6 +495,10 @@ class CodeWriter():
                 ({func_name}$END_LCL)"""
             
         elif command == "call":
+            # save the current frame (return address, LCL, ARG, THIS, THAT)
+            # adjust ARG and LCL for the callee
+            # mark where the return location should be
+            # jump to the callee function
             output = f"""\
                 @RET_FROM_{func_name}_{self.unique_label_index}
                 D = A
@@ -553,6 +556,9 @@ class CodeWriter():
             self.unique_label_index += 1
 
         elif command == "return":
+            # restore the called function's original environment using the saved frame
+            # copy the callee's return value (pushed to the top of the stack) to ARG 0
+            # go to the return address saved in the frame
             output = """\
                 @LCL
                 D = M
@@ -655,6 +661,10 @@ if __name__ == "__main__":
     files_to_translate = get_vm_files(vm_fp)
     asm_fp = get_output_file_path(vm_fp)
     code_writer = CodeWriter(asm_fp)
+
+    # If the given path is a directory, then bootstrap is needed
+    if len(files_to_translate) > 1:
+        code_writer.add_bootstrap_code()
 
     for vm_file in files_to_translate:
         parser = Parser(vm_file)
