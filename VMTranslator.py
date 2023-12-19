@@ -103,6 +103,38 @@ class CodeWriter():
         self.translated_commands = []   # list to store translated asm instructions
         self.unique_label_index = 0 # TODO: I have to increment this somewhere. currently not doing it
 
+        self.translated_commands.append(self._write_bootstrap_code())
+
+    def _write_bootstrap_code(self) -> str:
+        """
+        Bootstrap code = placed in ROM[0~] -> because we designed HACK platform in such a way that
+        when it boots up (upon reset) it starts executing from ROM[0]. But we do not handle placing the
+        code in ROM, so it only means that this bootstrap code should be generated at the very beginning of the .asm file
+        1. Initialize VM stack
+        2. first VM function that starts executing is Sys.init (argumentless)
+        """        
+        bootstrap_init = """\
+            // initialize pointer registers
+            @256
+            D = A
+            @SP
+            M = D
+            @LCL
+            M = -1
+            @ARG
+            M = -1
+            @THIS
+            M = -1
+            @THAT
+            M = -1"""
+        bootstrap_call_sys_init = self._write_function_calling("call", "Sys.init", "0")
+        infinite_loop = """\
+            (INF_LOOP)
+            @INF_LOOP
+            0; JMP"""
+        
+        return bootstrap_init + "\n" + bootstrap_call_sys_init + "\n" + infinite_loop
+
     def _write_arithmetic(self, command:str) -> str:
         """
         Operands are popped from the stack and the result is pushed to the stack.
@@ -458,7 +490,7 @@ class CodeWriter():
         elif command == "call":
             output = f"""\
                 @RET_FROM_{func_name}_{self.unique_label_index}
-                D = M
+                D = A
                 @SP
                 M = M + 1   // increment SP ahead of time
                 A = M - 1
@@ -519,16 +551,16 @@ class CodeWriter():
 
                 @frame 
                 M = D   // frame = LCL
-                AM = M - 1  // trick: decrement the frame pointer var
-                D = M   // D = *(frame - 1)
-                @THAT
-                M = D
-
+                @5
+                D = A
                 @frame 
-                AM = M - 1  // trick: decrement frame again
-                D = M   // D = *(frame - 2)
-                @THIS
-                M = D
+                AM = M - D   // frame = LCL - 5
+                D = M
+                @return_address
+                M = D   // return address need to be saved in a temp variable
+                // this is because for argumentless func, memory address that hold
+                // return address is the same as where ARG is pointing
+                // so when ARG 0 gets overriden with the return value, return address gets wiped out
 
                 @SP
                 A = M - 1 
@@ -541,22 +573,33 @@ class CodeWriter():
                 D = M + 1
                 @SP
                 M = D   // SP = ARG + 1
-                
-                @frame 
-                AM = M - 1  // trick: decrement frame again
-                D = M   // D = *(frame - 3)
-                @ARG
-                M = D
 
                 @frame 
-                AM = M - 1  // trick: decrement frame again
+                AM = M + 1
                 D = M   // D = *(frame - 4)
                 @LCL
                 M = D
 
                 @frame 
-                A = M - 1
-                A = M   // A = *(frame - 5) = return address
+                AM = M + 1
+                D = M   // D = *(frame - 3)
+                @ARG
+                M = D
+
+                @frame 
+                AM = M + 1
+                D = M   // D = *(frame - 2)
+                @THIS
+                M = D
+
+                @frame 
+                AM = M + 1
+                D = M   // D = *(frame - 1)
+                @THAT
+                M = D
+
+                @return_address 
+                A = M
                 0; JMP"""
 
         return output
@@ -586,44 +629,13 @@ class CodeWriter():
             raise NotImplementedError("more to come in the next project")
         
         self.unique_label_index += 1
-        self.translated_commands.append(translated_command + "\n\n")
+        self.translated_commands.append(translated_command)
 
     def write(self):
-        """
-        Bootstrap code = placed in ROM[0~] -> because we designed HACK platform in such a way that
-        when it boots up (upon reset) it starts executing from ROM[0]. But we do not handle placing the
-        code in ROM, so it only means that this bootstrap code should be generated at the very beginning of the .asm file
-        1. Initialize VM stack: starts at RAM[256]
-        2. first VM function that starts executing is Sys.init (argumentless)
-        """        
-        bootstrap_init = """\
-            // initialize pointer registers
-            @256
-            D = A
-            @SP
-            M = D
-            @LCL
-            M = -1
-            @ARG
-            M = -1
-            @THIS
-            M = -1
-            @THAT
-            M = -1"""
-        bootstrap_call_sys_init = self._write_function_calling("call", "Sys.init", "0")
-        infinite_loop = """\
-            (INF_LOOP)
-            @INF_LOOP
-            0; JMP"""
-
         with open(self.output_file, "w") as output_file:
-            output_file.write(dedent(bootstrap_init + "\n\n"))
-            output_file.write(dedent(bootstrap_call_sys_init + "\n\n"))
-
             for translated_commands in self.translated_commands:
-                output_file.write(dedent(translated_commands))
+                output_file.write(dedent(translated_commands + "\n\n"))
 
-            output_file.write(dedent(infinite_loop))
 
 if __name__ == "__main__":
     """
