@@ -102,8 +102,16 @@ class CodeWriter():
         self.output_file = output_fp
         self.translated_commands = []   # list to store translated asm instructions
         self.unique_label_index = 0 # TODO: I have to increment this somewhere. currently not doing it
+        self.current_vm_file = None
 
         self.translated_commands.append(self._write_bootstrap_code())
+
+    def set_file_name(self, file_name: str):
+        """
+        Informs the Code Writer that the tranlsation of has started. Necessary for handling static segments across multiple files.
+        Convention is to set static variable to have <file_name>.<index> format.
+        """
+        self.current_vm_file = file_name
 
     def _write_bootstrap_code(self) -> str:
         """
@@ -341,7 +349,7 @@ class CodeWriter():
             MemorySegment.THAT: ("THAT", "M"),
             MemorySegment.TEMP: ("R5", "A"),
             MemorySegment.POINTER: ("THIS", "A"),
-            MemorySegment.STATIC: (f"{self.output_file.stem}.{index}", None)
+            MemorySegment.STATIC: (f"{self.current_vm_file.stem}.{index}", None)
         }
         # pointer segment is mapped on RAM 3-4
         # temp location 5-12
@@ -650,6 +658,7 @@ if __name__ == "__main__":
 
     for vm_file in files_to_translate:
         parser = Parser(vm_file)
+        code_writer.set_file_name(vm_file)
 
         while parser.has_more_commands():
             command = parser.get_command()
