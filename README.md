@@ -395,6 +395,9 @@ In this course, the contract between the caller and callee includes the callee ~
 3. The caller's stack and memory segment get restored using #3 in the previous section
 4. Jump to the marked return address
 
-### The Net Effect of Calling a Function and Its Returning
-The arguments that the caller passed to the callee are replaced by the callee's return value. Anything hasn't changed from the caller's point of view.
+
+So, where is the abstraction in this?
+1. The only net effect of subroutine handling is that the arguments the caller passed to the callee are replaced by the callee's return value. Anything hasn't changed from the caller's point of view.
+2. Whether calling a built-in function or a user-defined function does not matter. It has the same look and feel. It follows the same under-the-hood process described above.
+
 
