@@ -295,8 +295,10 @@ Project: Building a VM translator (part 1 - only handles arithmetic and memory s
    - Back to the previous example: now we need 2 translators that convert 2 high-level languages into the intermediate language. Then we need 3 translators to convert the intermediate language to different machine languages. In total, we need 5 translators. Not much difference in this example, but as the number gets larger, it becomes very efficient.
    - Real life example: Java (bytecode & JVM). In order to execute bytecode programs, the client computers should have suitable JVM implementations ![diagram](2-tier-compilation.JPEG)
      Microsoft .NET infrastructure & Common Language Runtime(CLR) ![diagram2](clr.JPEG)
+- what gets lost in tranlsation during compilation process:
+   - HLL program ---- (compiler) ----> VM program: notion of class, method and function all become functions; Also multiple files in HLL program turns into a single-file VM program.
+   - VM program ---- (VM Translator) ----> assembly program: VM functions turn into labels in assembly
      
-
 ### Virtual Machine
 - General definition: An abstract computer that is realized on other computer platform
 - In the context of 2-tier compilation: what runs the intermediate code
@@ -322,6 +324,7 @@ Project: Building a VM translator (part 1 - only handles arithmetic and memory s
    - pop them
    - do the operation
    - push the result to the stack
+- Once we deal with subroutines, stack becomes even more useful. The "calling chain" of functions have LIFO pattern (last called funciton executes and returns first), which is the same as the property of a stack
   
 ### Stack Access VS Memory Access
 | stack         | memory           |
@@ -364,6 +367,10 @@ introduces non-linear program flow
    - have to push an expression to evaluate beforehand
    - if NOT evaluates to zero then jump
 
+#### Function Calling Commands
+- `function <func_name> <num_local_vars>`
+- `call <function_name> <num_args>`: the caller already pushed <num_args> arguments to the stack
+- `return`
 
 ### Things to Consider for VM Implementation
 1. how to map VM data structures (in our case, stack and memory segments?) using the host HW platform -> In other words, how to emulate the VM world on the target platform
