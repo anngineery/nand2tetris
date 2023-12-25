@@ -276,8 +276,8 @@ Some key terms to google are Harvard Architecture and von Neuman Architecture.
    - But what if I am using an A instruction with "out-of-scope" memory address? No worries, because the opcode for A instruction (the MSB) is 0.
 - `outM` and `writeM` outputs are combinatorial, `addressM` and `PC` outputs are clocked
 
-## Week 7
-Project: Building a VM translator (part 1 - only handles arithmetic and memory segment access operations)
+## Week 7 + 8
+Project: Building a VM translator (part 1 - only handles arithmetic and memory segment access operations, part 2 - add branching and subroutine calling to Week 7's version)
 
 ### High-level Langauges
 - We program in languages like Java, Python, etc. **How does a computer know how to execute these programs?**
@@ -357,6 +357,14 @@ type 3: command arg1 arg2
 - this is how we let go of symbolic variables (variable names in HLL)
 - syntax: `push/pop segment_name index`
 
+#### Branching Commands
+introduces non-linear program flow
+1. unconditionl: `goto` label
+2. conditional: `if-goto` label
+   - have to push an expression to evaluate beforehand
+   - if NOT evaluates to zero then jump
+
+
 ### Things to Consider for VM Implementation
 1. how to map VM data structures (in our case, stack and memory segments?) using the host HW platform -> In other words, how to emulate the VM world on the target platform
    - our standard mapping looks as follows (we kinda touched on in back in Week 4):
@@ -372,3 +380,21 @@ type 3: command arg1 arg2
             -    keyboard: RAM[24576]
       -    remaining: ?
 2. how to express VM commands using the host machine language (in our case, HACK assembly language)
+
+### Function Abstraction
+#### What happens when a function calls another function?
+1. The parameters (arguments) need to be passed from the caller to the callee
+2. The caller is about pause its flow and jump. Where to resume once the callee completes needs to be determined (aka the return address).
+3. The caller's stack and memory segment need to be saved, so when we return, we can pick up from the exact same state
+4. Jump to the callee function
+
+#### What happens when a called function returns?
+In this course, the contract between the caller and callee includes the callee ~always~ pushing the return value to the stack. If it is a void function, it is the caller's job to ignore or discard it.
+1. The callee returns its result to the caller (aka the return value)
+2. The callee's memory resources get recycled
+3. The caller's stack and memory segment get restored using #3 in the previous section
+4. Jump to the marked return address
+
+### The Net Effect of Calling a Function and Its Returning
+The arguments that the caller passed to the callee are replaced by the callee's return value. Anything hasn't changed from the caller's point of view.
+
