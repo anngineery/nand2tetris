@@ -382,6 +382,7 @@ introduces non-linear program flow
 2. how to express VM commands using the host machine language (in our case, HACK assembly language)
 
 ### Function Abstraction
+![subroutine diagram](subroutine_calling.JPEG)
 #### What happens when a function calls another function?
 1. The parameters (arguments) need to be passed from the caller to the callee
 2. The caller is about pause its flow and jump. Where to resume once the callee completes needs to be determined (aka the return address).
@@ -392,7 +393,7 @@ introduces non-linear program flow
 In this course, the contract between the caller and callee includes the callee ~always~ pushing the return value to the stack. If it is a void function, it is the caller's job to ignore or discard it.
 1. The callee returns its result to the caller (aka the return value)
 2. The callee's memory resources get recycled
-3. The caller's stack and memory segment get restored using #3 in the previous section
+3. The caller's stack and memory segment get restored using #3 in the [previous section](#part-2-add-branching-and-subroutine-calling-to-Week-7's-version)
 4. Jump to the marked return address
 
 
