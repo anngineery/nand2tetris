@@ -393,6 +393,8 @@ The compiler's expected to create 1 Main.vm file, which includes 1 VM function c
 
 ### Function Calling Abstraction
 ![subroutine diagram](subroutine_calling.JPEG)
+[what is a frame?](https://www.nand2tetris.org/copy-of-nestedcall)
+[what is the global stack?](global_stack.png)
 #### What happens when a function calls another function?
 1. The parameters (arguments) need to be passed from the caller to the callee
 2. The caller is about pause its flow and jump. Where to resume once the callee completes needs to be determined (aka the return address).
@@ -412,7 +414,7 @@ So, where is the abstraction in this?
 2. Whether calling a built-in function or a user-defined function does not matter. It has the same look and feel. It follows the same under-the-hood process described above.
 
 ### Function Calling Implementation
-TODO: insert diagrams here
+![function_calling](function_calling_implementation.png)
 #### The Caller's Point of View
 - push as many arguments as the callee needs to the stack
 - call the callee using the following syntax: `call <callee's name> <num_args>`
