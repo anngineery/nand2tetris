@@ -28,6 +28,7 @@ class TokenType(str, Enum):
     INT_CONST = "integerConstant"
     STR_CONST = "stringConstant"
 
+
 class Tokenizer:
     """
     Break down a given input into a stream of tokens (removes white spaces and comments) 
