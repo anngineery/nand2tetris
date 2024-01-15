@@ -51,6 +51,8 @@ class Tokenizer:
 
             while current_line != "":     # if it's empty string, it's EOF
                 current_line = current_line.strip()    # strip leading and trailing spaces including \n
+                current_line_tokens = []
+
                 # ignore an empty line or an comment (// or /** text */ or /* text */)
                 if not (current_line == "" or current_line.startswith("//") or re.match(r"/\*\*[\s\S]*\*/|/\*[\s\S]*\*", current_line) != None):
                     current_line = current_line.split("//")[0]  # get rid of inline comment if there is one
@@ -60,18 +62,16 @@ class Tokenizer:
                     # now we deal with spaces, double quotes and stuff
                     for qd in quote_deliminated:
                         if re.match(Tokenizer.string_literal_pattern, qd):
-                            qd = qd.strip()   # this is necessary as re.split result has random empty strings, spaces, etc
-                            if qd != "":
-                                self.token_array.append(qd) # note: contains quotes so we can identify as a string later
-                                self.total_token_num += 1
-
+                            current_line_tokens.append(qd)
+     
                         else:   # split at every space and symbol
-                            tokens = re.split(r"([\s\(\)\{\}\[\]\.\,\+\-\*\|;/&<>=~])", qd)
-                            for token in tokens:
-                                token = token.strip()   # this is necessary as re.split result has random empty strings, spaces, etc
-                                if token != "":
-                                    self.token_array.append(token)
-                                    self.total_token_num += 1
+                            current_line_tokens.extend(re.split(r"([\s\(\)\{\}\[\]\.\,\+\-\*\|;/&<>=~])", qd))
+
+                    for token in current_line_tokens:
+                        token = token.strip()   # this is necessary as re.split result has random empty strings, spaces, etc
+                        if token != "":
+                            self.token_array.append(token)
+                            self.total_token_num += 1
 
                 current_line = file.readline()
 
