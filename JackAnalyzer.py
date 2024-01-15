@@ -53,8 +53,16 @@ class Tokenizer:
                 current_line = current_line.strip()    # strip leading and trailing spaces including \n
                 current_line_tokens = []
 
-                # ignore an empty line or an comment (// or /** text */ or /* text */)
-                if not (current_line == "" or current_line.startswith("//") or re.match(r"/\*\*[\s\S]*\*/|/\*[\s\S]*\*", current_line) != None):
+                # handling multi-line comments
+                if current_line.startswith(("/**", "/*")) ^ current_line.endswith("*/"):
+                    self.block_comment_start = not self.block_comment_start
+                    
+                # ignore an empty line or a full comment (// or /** text */ or /* text */)
+                # or while we are processing multi-line comments
+                elif current_line != "" and not current_line.startswith("//") and \
+                    not (current_line.startswith(("/**", "/*")) and current_line.endswith("*/")) and \
+                        not self.block_comment_start:
+                    print(current_line)
                     current_line = current_line.split("//")[0]  # get rid of inline comment if there is one
                     # first filter out string literals, because that supersedes other symbols
                     quote_deliminated = re.split(Tokenizer.string_literal_pattern, current_line)
