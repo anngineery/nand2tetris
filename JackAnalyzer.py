@@ -22,27 +22,29 @@ def get_input_files(path: Path) -> List[Path]:
 
 
 class TokenType(str, Enum):
-    KEYWORD = "KEYWORD"
-    SYMBOL = "SYMBOL"
-    IDENTIFIER = "IDENTIFIER"
-    INT_CONST = "INT_CONST"
-    STR_CONST = "STR_CONST"
+    KEYWORD = "keyword"
+    SYMBOL = "symbol"
+    IDENTIFIER = "identifier"
+    INT_CONST = "integerConstant"
+    STR_CONST = "stringConstant"
 
 class Tokenizer:
     """
     Break down a given input into a stream of tokens (removes white spaces and comments) 
     and classify them into one of 5 lexical categories.
+    I intentionally avoided using shlex, a built-in library for writing lexical analyzer.
     """
     keyword_list = ["CLASS", "METHOD", "FUNCTION", "CONSTRUCTOR", "INT", "BOOLEAN", "CHAR", "VOID", "VAR", "STATIC", "FIELD", "LET", "DO", "IF", "ELSE", "WHILE", "RETURN", "TRUE", "FALSE", "NULL", "THIS"]
-    symbol_list = ["(", ")", "{", "}", "[", "]", ".", ",", ";", "+", "-", "*", "/", "|", "<", ">", "=", "~"]
+    symbol_list = ["(", ")", "{", "}", "[", "]", ".", ",", ";", "+", "-", "*", "/", "&", "|", "<", ">", "=", "~"]
     int_const_range = (0, 32767)
+    string_literal_pattern = r'(\"[^\"]+\")'
 
     def __init__(self, fp: Path):
         self.fp = fp
         self.current_token_index = None
         self.total_token_num = 0
         self.token_array = []
-        self.quote_open = False
+        self.block_comment_start = False
 
         with open(fp, "r") as file:
             current_line = file.readline()
@@ -52,16 +54,25 @@ class Tokenizer:
                 # ignore an empty line or an comment (// or /** text */ or /* text */)
                 if not (current_line == "" or current_line.startswith("//") or re.match(r"/\*\*[\s\S]*\*/|/\*[\s\S]*\*", current_line) != None):
                     current_line = current_line.split("//")[0]  # get rid of inline comment if there is one
-                    # split at every symbols + whitespace (splitting at whitespace separate keywords out) + double quote
-                    tokens = re.split(r"([\"\s\(\)\{\}\[\]\.\,\+\-\*\|;/&<>=~])", current_line)
+                    # first filter out string literals, because that supersedes other symbols
+                    quote_deliminated = re.split(Tokenizer.string_literal_pattern, current_line)
 
-                    for token in tokens:
-                        token = token.strip()   # this is necessary sa re.split result has random empty strings, spaces, etc
-                        if token != "":
-                            self.token_array.append(token)
-                            self.total_token_num += 1
+                    # now we deal with spaces, double quotes and stuff
+                    for qd in quote_deliminated:
+                        if re.match(Tokenizer.string_literal_pattern, qd):
+                            qd = qd.strip()   # this is necessary as re.split result has random empty strings, spaces, etc
+                            if qd != "":
+                                self.token_array.append(qd) # note: contains quotes so we can identify as a string later
+                                self.total_token_num += 1
 
-                    # TODO: handle multi-line comments
+                        else:   # split at every space and symbol
+                            tokens = re.split(r"([\s\(\)\{\}\[\]\.\,\+\-\*\|;/&<>=~])", qd)
+                            for token in tokens:
+                                token = token.strip()   # this is necessary as re.split result has random empty strings, spaces, etc
+                                if token != "":
+                                    self.token_array.append(token)
+                                    self.total_token_num += 1
+
                 current_line = file.readline()
 
         self.current_token_index = 0
@@ -75,19 +86,9 @@ class Tokenizer:
     def get_token_and_type(self) -> Tuple[str, TokenType]:
         current_token = self.token_array[self.current_token_index]
 
-        # if it is a quote that we encounter, flip `quote_open` flag and move 1 token forward
-        # as we do not consider quotes as a token
-        if current_token == "\"":
-            self.quote_open = not self.quote_open
-            self.current_token_index += 1
-            return self.get_token_and_type()
-    
-        # as long as it is inside quotes, everything is considered a string constant
-        if self.quote_open:
-            return current_token, TokenType.STR_CONST
-        
-        # if it wasn't wrapped in quotes, then we can classify based on the content itself
-        if current_token.upper() in Tokenizer.keyword_list:
+        if re.match(Tokenizer.string_literal_pattern, current_token):
+            return current_token[1:-1], TokenType.STR_CONST
+        elif current_token.upper() in Tokenizer.keyword_list:
             return current_token, TokenType.KEYWORD
         elif current_token in Tokenizer.symbol_list:
             return current_token, TokenType.SYMBOL
@@ -116,9 +117,22 @@ if __name__ == "__main__":
     for file in files_to_translate:
         output_file_name = file.with_suffix(".xml")
         tokenizer = Tokenizer(file) # is it the full path?
-        #print(tokenizer.token_array)
+        with open(output_file_name, "w") as output_file:
+            output_file.write("<tokens>" + "\n")
 
-        while tokenizer.has_more_tokens():
-            token, type = tokenizer.get_token_and_type()
-            print(token, type)
-            tokenizer.advance()
+            while tokenizer.has_more_tokens():
+                token, type = tokenizer.get_token_and_type()
+                #print(token, type)
+                # convert some symbols used by XMLs to display properly
+                if token == "<":
+                    token = "&lt;"
+                elif token == ">":
+                    token = "&gt;"
+                elif token == "\"":
+                    token = "&quot;"
+                elif token == "&":
+                    token = "&amp;"
+                output_file.write(f"<{type}>{token}</{type}>" + "\n")
+                tokenizer.advance()
+
+            output_file.write("</tokens>" + "\n")
