@@ -37,29 +37,33 @@ if __name__ == "__main__":
         # first, the tokenizer extracts the stream of tokens from the input file
         while tokenizer.has_more_tokens():
             token, type = tokenizer.get_token_and_type()
-
-            # convert some symbols used by XMLs to display properly
-            if token == "<":
-                token = "&lt;"
-            elif token == ">":
-                token = "&gt;"
-            elif token == "\"":
-                token = "&quot;"
-            elif token == "&":
-                token = "&amp;"
-
             token_stream.append((token, type))
             tokenizer.advance()
 
         # second, the compilation engine structures tokens into a program
         #print(token_stream)
-        engine = CompilationEngine(token_stream, compiled_output)
-        engine.compile_class()
+        try:
+            engine = CompilationEngine(token_stream, compiled_output)
+            engine.compile_class()
+        except:
+            for line in compiled_output:
+
+                # convert some symbols used by XMLs to display properly
+                if line == "<symbol> < </symbol>":
+                    line = "<symbol> &lt; </symbol>"
+                elif line == "<symbol> > </symbol>":
+                    line = "<symbol> &gt; </symbol>"
+                elif line == "<symbol> \" </symbol>":
+                    line = "<symbol> &quot; </symbol>"
+                elif line == "<symbol> & </symbol>":
+                    line = "<symbol> &amp; </symbol>"
+
+                print(line)
 
         # third, the final xml is generated
-        with open(output_file_name, "w") as file:
-            for line in compiled_output:
-                file.write(line + "\n")
+        # with open(output_file_name, "w") as file:
+        #     for line in compiled_output:
+        #         file.write(line + "\n")
 
 """
 tokenizer's only responsibility is to break down the input file into tokens.

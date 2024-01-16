@@ -46,7 +46,6 @@ class CompilationEngine:
         self._process_terminal_token()  # "("
         self.compile_expression_list()
         self._process_terminal_token()  # ")"
-        self._process_terminal_token()  # ";"
 
     def compile_class(self):
         self.output.append(f"<{ProgramConstructType.CLASS}>")
@@ -153,6 +152,7 @@ class CompilationEngine:
         self.output.append(f"<{ProgramConstructType.DO_STATEMENT}>")
         self._process_terminal_token()  # "do"
         self._compile_subroutine_call()
+        self._process_terminal_token()  # ";"
         self.output.append(f"</{ProgramConstructType.DO_STATEMENT}>")
 
     def compile_let(self):
@@ -212,6 +212,7 @@ class CompilationEngine:
         while token in ["+", "-", "*", "/", "&", "|", "<", ">", "="] and type == TokenType.SYMBOL:
             self._process_terminal_token()  # operator
             self.compile_term()
+            token, type = self.input[self.current_token_index]
         self.output.append(f"</{ProgramConstructType.EXPRESSION}>")
 
     def compile_term(self):
@@ -226,6 +227,7 @@ class CompilationEngine:
         elif type == TokenType.SYMBOL:
             if token in ["-", "~"]:
                 self._process_terminal_token() 
+                self.compile_term()
             elif token == "(":
                 self._process_terminal_token()  #"("
                 self.compile_expression()
@@ -233,8 +235,8 @@ class CompilationEngine:
             else:
                 raise ValueError(f"{token} is not a valid term")
         elif type == TokenType.IDENTIFIER:
-            # look ahead
-            if self.input[self.current_token_index + 1] == ("(", TokenType.SYMBOL):
+            lookahead_token, lookahead_type = self.input[self.current_token_index + 1] 
+            if lookahead_type == TokenType.SYMBOL and lookahead_token in ["(", "."]:
                 self._compile_subroutine_call()
 
             else:   # just variable or variable array
