@@ -10,7 +10,19 @@ class ProgramConstructType(str, Enum):
     CLASS = "class"
     CLASS_VAR_DECLARATION = "classVarDec"
     SUBROUTINE_DECLARATION = "subroutineDec"
-    # TODO: more to be added
+    PARAMETER_LIST = "parameterList"
+    SUBROUTINE_BODY = "subroutineBody"
+    VARIABLE_DECLARATION = "varDec"
+    STATEMENTS = "statements"
+    LET_STATEMENT = "letStatement"
+    IF_STATEMENT = "ifStatement"
+    WHILE_STATEMENT = "whileStatement"
+    DO_STATEMENT = "doStatement"
+    RETURN_STATEMENT = "returnStatement"
+    EXPRESSION = "expression"
+    EXPRESSION_LIST = "expressionList"
+    TERM = "term"
+
 
 
 class CompilationEngine:
@@ -19,12 +31,22 @@ class CompilationEngine:
        self.output = output_stream
        self.current_token_index = 0
 
-       self.compile_class()
-
     def _process_terminal_token(self):
         token, type = self.input[self.current_token_index]
-        self.output.append(f"<{type}>{token}</{type}>")
+        self.output.append(f"<{type}> {token} </{type}>")
+        #print(f"<{type}> {token} </{type}>")
         self.current_token_index += 1
+
+    def _compile_subroutine_call(self):
+        # look one token ahead to determine if this subroutine call is a method or not
+        if self.input[self.current_token_index + 1] == (".", TokenType.SYMBOL):
+            self._process_terminal_token()  # class name or variable name
+            self._process_terminal_token()  # "."
+        self._process_terminal_token()  # subroutine name
+        self._process_terminal_token()  # "("
+        self.compile_expression_list()
+        self._process_terminal_token()  # ")"
+        self._process_terminal_token()  # ";"
 
     def compile_class(self):
         self.output.append(f"<{ProgramConstructType.CLASS}>")
@@ -45,7 +67,7 @@ class CompilationEngine:
 
     def compile_class_var_declaration(self):
         self.output.append(f"<{ProgramConstructType.CLASS_VAR_DECLARATION}>")
-        self._process_terminal_token()  # static or field
+        self._process_terminal_token()  # "static" or "field"
         self._process_terminal_token()  # type
         self._process_terminal_token()  # variable name
 
@@ -57,42 +79,179 @@ class CompilationEngine:
         self._process_terminal_token()  # ";"
         self.output.append(f"</{ProgramConstructType.CLASS_VAR_DECLARATION}>")
         
-    def compile_subroutine():
-        pass
+    def compile_subroutine(self):
+        self.output.append(f"<{ProgramConstructType.SUBROUTINE_DECLARATION}>")
+        self._process_terminal_token()  # "constructor", "function" or "method"
+        self._process_terminal_token()  # "void" or type
+        self._process_terminal_token()  # subroutine name
+        self._process_terminal_token()  # "("
+        self.compile_parameter_list()
+        self._process_terminal_token()  # ")"
+        self.compile_subroutine_body()
+        self.output.append(f"</{ProgramConstructType.SUBROUTINE_DECLARATION}>")
 
-    def compile_parameter_list():
-        pass
+    def compile_parameter_list(self):
+        self.output.append(f"<{ProgramConstructType.PARAMETER_LIST}>")
+        token, type = self.input[self.current_token_index]
+        # check if there is at least one parameter
+        while token in ["int", "char", "boolean"] or type == TokenType.IDENTIFIER:
+            self._process_terminal_token()  # type
+            self._process_terminal_token()  # variable name
 
-    def compile_var_declaration():
-        pass
+            if self.input[self.current_token_index] == (",", TokenType.SYMBOL):
+                self._process_terminal_token()  # ","
 
-    def compile_statements():
-        pass
+            token, type = self.input[self.current_token_index]
+        self.output.append(f"</{ProgramConstructType.PARAMETER_LIST}>")
 
-    def compile_do():
-        pass
+    def compile_subroutine_body(self):
+        self.output.append(f"<{ProgramConstructType.SUBROUTINE_BODY}>")
+        self._process_terminal_token()  # "{"
+        # 0 or more variable declaration
+        while self.input[self.current_token_index] == ("var", TokenType.KEYWORD): 
+            self.compile_var_declaration()  
+        self.compile_statements()
+        self._process_terminal_token()  # "}"
+        self.output.append(f"</{ProgramConstructType.SUBROUTINE_BODY}>")
 
-    def compile_let():
-        pass
+    def compile_var_declaration(self):
+        self.output.append(f"<{ProgramConstructType.VARIABLE_DECLARATION}>")
+        self._process_terminal_token()  # "var"
+        self._process_terminal_token()  # type
+        self._process_terminal_token()  # variable name
 
-    def compile_while():
-        pass
+        # handling optional (0 or more) piece
+        while self.input[self.current_token_index] == (",", TokenType.SYMBOL):
+            self._process_terminal_token()  # ","
+            self._process_terminal_token()  # variable name
+        
+        self._process_terminal_token()  # ";"
+        self.output.append(f"</{ProgramConstructType.VARIABLE_DECLARATION}>")
 
-    def compile_return():
-        pass
+    def compile_statements(self):
+        self.output.append(f"<{ProgramConstructType.STATEMENTS}>")
+        token, type = self.input[self.current_token_index]
 
-    def compile_if():
-        pass
+        # handle 0 or more various types of statements
+        while type == TokenType.KEYWORD and token in ["let", "if", "while", "do", "return"]:
+            if token == "let":
+                self.compile_let()
+            elif token == "if":
+                self.compile_if()
+            elif token == "while":
+                self.compile_while()
+            elif token == "do":
+                self.compile_do()
+            elif token == "return":
+                self.compile_return()
 
-    def compile_expression():
-        pass
+            token, type = self.input[self.current_token_index]
 
-    def compile_term():
-        pass
+        self.output.append(f"</{ProgramConstructType.STATEMENTS}>")
 
-    def compile_expression_list():
-        pass
+    def compile_do(self):
+        self.output.append(f"<{ProgramConstructType.DO_STATEMENT}>")
+        self._process_terminal_token()  # "do"
+        self._compile_subroutine_call()
+        self.output.append(f"</{ProgramConstructType.DO_STATEMENT}>")
 
+    def compile_let(self):
+        self.output.append(f"<{ProgramConstructType.LET_STATEMENT}>")
+        self._process_terminal_token()  # "let"
+        self._process_terminal_token()  # variable name
+        # handling optional (0 or 1) pieces
+        if self.input[self.current_token_index] == ("[", TokenType.SYMBOL):
+            self._process_terminal_token()  # "["
+            self.compile_expression()
+            self._process_terminal_token()  # "]"
+        self._process_terminal_token()  # "="
+        self.compile_expression()
+        self._process_terminal_token()  # ";"
+        self.output.append(f"</{ProgramConstructType.LET_STATEMENT}>")
 
-# if it's a terminal, then just use the given type and the value itself and make the marked-up output
-    
+    def compile_while(self):
+        self.output.append(f"<{ProgramConstructType.WHILE_STATEMENT}>")
+        self._process_terminal_token()  # "while"
+        self._process_terminal_token()  # "("
+        self.compile_expression()
+        self._process_terminal_token()  # ")"
+        self._process_terminal_token()  # "{"
+        self.compile_statements()
+        self._process_terminal_token()  # "}"
+        self.output.append(f"</{ProgramConstructType.WHILE_STATEMENT}>")
+
+    def compile_return(self):
+        self.output.append(f"<{ProgramConstructType.RETURN_STATEMENT}>")
+        self._process_terminal_token()  # "return"
+        # 0 or 1 expression can follow after the "return" keyword
+        if self.input[self.current_token_index] != (";", TokenType.SYMBOL):
+            self.compile_expression()
+        self._process_terminal_token()  # ";"
+        self.output.append(f"</{ProgramConstructType.RETURN_STATEMENT}>")
+
+    def compile_if(self):
+        self.output.append(f"<{ProgramConstructType.IF_STATEMENT}>")
+        self._process_terminal_token()  # "if"
+        self._process_terminal_token()  # "("
+        self.compile_expression()
+        self._process_terminal_token()  # ")"
+        self._process_terminal_token()  # "{"
+        self.compile_statements()
+        self._process_terminal_token()  # "}"
+        if self.input[self.current_token_index] == ("else", TokenType.KEYWORD):
+            self._process_terminal_token()  # "else"
+            self._process_terminal_token()  # "{"
+            self.compile_statements()
+            self._process_terminal_token()  # "}"
+        self.output.append(f"</{ProgramConstructType.IF_STATEMENT}>")
+
+    def compile_expression(self):
+        self.output.append(f"<{ProgramConstructType.EXPRESSION}>")
+        self.compile_term()
+        token, type = self.input[self.current_token_index]
+        while token in ["+", "-", "*", "/", "&", "|", "<", ">", "="] and type == TokenType.SYMBOL:
+            self._process_terminal_token()  # operator
+            self.compile_term()
+        self.output.append(f"</{ProgramConstructType.EXPRESSION}>")
+
+    def compile_term(self):
+        self.output.append(f"<{ProgramConstructType.TERM}>")
+        token, type = self.input[self.current_token_index]
+        if type == TokenType.INT_CONST:
+            self._process_terminal_token() 
+        elif type == TokenType.STR_CONST:
+            self._process_terminal_token() 
+        elif type == TokenType.KEYWORD and token in ["true", "false", "null", "this"]:
+            self._process_terminal_token() 
+        elif type == TokenType.SYMBOL:
+            if token in ["-", "~"]:
+                self._process_terminal_token() 
+            elif token == "(":
+                self._process_terminal_token()  #"("
+                self.compile_expression()
+                self._process_terminal_token()  #")"
+            else:
+                raise ValueError(f"{token} is not a valid term")
+        elif type == TokenType.IDENTIFIER:
+            # look ahead
+            if self.input[self.current_token_index + 1] == ("(", TokenType.SYMBOL):
+                self._compile_subroutine_call()
+
+            else:   # just variable or variable array
+                self._process_terminal_token() 
+
+                if self.input[self.current_token_index] == ("[", TokenType.SYMBOL):
+                    self._process_terminal_token()  # "["
+                    self.compile_expression()
+                    self._process_terminal_token()  # "]"
+        else:
+            raise ValueError(f"{token} is not a valid term")
+        self.output.append(f"</{ProgramConstructType.TERM}>")
+
+    def compile_expression_list(self):
+        self.output.append(f"<{ProgramConstructType.EXPRESSION_LIST}>")
+        while self.input[self.current_token_index] != (")", TokenType.SYMBOL):
+            self.compile_expression()
+            if self.input[self.current_token_index] == (",", TokenType.SYMBOL):
+                self._process_terminal_token()
+        self.output.append(f"</{ProgramConstructType.EXPRESSION_LIST}>")

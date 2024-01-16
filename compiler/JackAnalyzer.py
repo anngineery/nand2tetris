@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     for file in files_to_translate:
         token_stream: List[Tuple[str]] = [] # will be filled out by the tokenizer
-        output_token_stream = []    # will be filled out by the compilation engine
+        compiled_output = []    # will be filled out by the compilation engine
         output_file_name = file.with_suffix(".xml")
         tokenizer = Tokenizer(file)
 
@@ -52,11 +52,14 @@ if __name__ == "__main__":
             tokenizer.advance()
 
         # second, the compilation engine structures tokens into a program
-        print(token_stream)
-        engine = CompilationEngine(token_stream, output_token_stream)
-        print(output_token_stream)
+        #print(token_stream)
+        engine = CompilationEngine(token_stream, compiled_output)
+        engine.compile_class()
 
         # third, the final xml is generated
+        with open(output_file_name, "w") as file:
+            for line in compiled_output:
+                file.write(line + "\n")
 
 """
 tokenizer's only responsibility is to break down the input file into tokens.
