@@ -4,73 +4,15 @@
 # Objective
 Build a fully functioning general purpose computer, both hardware and software components, from scratch.\
 This computer follows [Von Neumann Architecture](https://www.computerscience.gcse.guru/wp-content/uploads/2016/04/Von-Neumann-Architecture-Diagram.jpg).
-# What I have learned from the course
+
 ## Week 1
 Project: implement boolean logic of 15 elementary logic gates using Hardware Description Language (HDL)
-
-### 2 ways to describe a boolean function:
-1. Boolean formula
-2. Truth table
-   
-Going from (1) -> (2): substitute possible input values and evaluate the output\
-Going from (2) -> (1): construct a disjunctive normal form formula and simplify the expression using boolean identities
-
-### Boolean Identities
-![table](http://www.cs.ucc.ie/osullb/cs1101/labs/08a/identities.jpg)
-
-### Important & Interesting Theorem
-Any boolean function can be represetned only using AND, NOT and OR gates\
---> Any boolean function can be represetned only using AND and NOT gates
-  > Proof: X or Y = NOT (NOT X AND NOT Y) --  De Morgan's Law
-
---> Any boolean function can be represetned only using NAND gates
-  > Proof: \
-  > NOT X = NOT (X AND X) = X NAND X \
-  > X AND Y = NOT (NOT (X AND Y)) = NOT (X NAND Y)
-
-### Interface VS Implementation of a Gate
-| Interface    | Implementation |
-| -------- | ------- |
-| *how* does it do it? | *what* is it supposed to do? |
-| Not unique (multiple implementations possible for a gate) | unique (only 1 for a gate) |
-
-[Logic gate diagrams](https://logancollinsblog.files.wordpress.com/2020/06/table1.png?w=340&h=619)
-
-### Miscellaneous 
-- Bus: multiple bits that are manipulated together as one entity
-- HDL: functional/declarative language. It does not describe procedures/executions but a static structure of a chip, so the order of statements is not important
 
 ## Week 2
 Project: build Arithmetic Logic Unit (ALU) 
 
-### Numbers we can represent with n bits
-If all positive: 0 ~ 2<sup>n</sup>-1\
-If including negative numbers (using 2's complement): 
-- positive range: 0 ~ 2<sup>n-1</sup>-1   --> MSB = 0
-- negative range: -2<sup>n-1</sup> ~ -1   --> MSB = 1
-
-### 2's Complement
-If there is a n-bit binary number, -x is represented as 2<sup>n</sup>-x \
-So how do we compute -x? -x = 2<sup>n</sup>-x = 1 + (2<sup>n</sup>-1) - x --> just flip bits of x and add 1\
-[Why using 2's complement to represent negative works well](https://math.stackexchange.com/questions/1920772/why-twos-complement-works)? Essentially turn subtraction into addition
-
-### Adding two binary numbers
-Overflow occurs when there is a carry from the MSB. This gets ignored by computer effectively making it arithmetic modulo of 2<sup>n</sup>
-
-### Adders
-- Half Adder: add 2 input bits and outputs a sum and a carry bit
-- Full Adder: add 3 input bits and outputs a sum and a carry bit
-
 ## Week 3
 Project: build Random Access Memory (RAM) 
-
-### Combinational Logic VS Sequential Logic
-|         | Combinational    | Sequential |
-|---------| -------- | ------- |
-| Purpose | To compute output givn the input values | To preserve data (state) over time |
-| Time dependent | No, output is computed immediately\ `out[t] = in[t]` | Yes, it remembers *now* at time t what was injected *before*\ `out[t] = in[t-1]` |
-| Basic element | Logic gates | Flip-flops |
-| Example | ALU | Memory |
 
 ### Building Blocks of RAM and Important Terms
 1. Clock
@@ -112,37 +54,7 @@ Project: build Random Access Memory (RAM)
 ## Week 4
 Project: Writing programs with assembly language
 
-### Assembly, Assembler
-- Assembly: a low-level symbolic language
-- Assembler: translate assembly programs into binary code (machine language). HW fetches, interprets and executes these instructions.
-- So assembly language and binary code are 2 different expressions for the same semantics (assembly - friendly for humans, binary - friendly for computers)
-
-### Machine Language
-- specification of interface between SW and HW. It only consists of 0s and 1s, so pretty much unreadable to humans, but it is designed to manipulate HW directly.
-- Usually there are following types of machine language instructions:
-  1. Perform arithmetic and logical operations
-  2. Fetch and store values from the memory
-  3. Move values from a register to another
-  4. Test boolean conditions
-
-### Important HW Components
-![High-level diagram](https://static.javatpoint.com/computer/images/register-memory.png)
-- Memory:
-   - Purpose: store data and instructions
-   - Structure: an array of cells of a fixed length (called "word"). Each cell has its own unique address
-   - Notation used: `Memory[addr]` `RAM[addr]` `M[addr]`
-- Processor (CPU):
-   - Purpose: perform a set of elementary operations (ex) arithmetic, logic, memory access, branching
-   - contantly have to interact with the memeory to get the operands and store the result of the operation in registers or selected memory location
-- Register:
-   - Purpose: hold 1 value, served as a high-speed local memory. Faster to access than the main memory, which is bigger and further away
-   - Structure: similar to memory, a register has a fixed width (word size)
-- Input/Output Device
-   - CPU needs a protocol (a set of rules) to talk to an I/O device. SW driver knows and handles this protocol
-   - I/O device has a specific memeory location designated to itself to store its data
-   - (ex) Mouse -> uses memory addr 12345 to store the last cursor position
-
-### Specifically, HACK Computer HW
+### HACK Computer HW
 ![Architecture diagram](hack_computer_arch.png)
 - ~~Von Neumann architecture~~ (I think it is closer to Harvard architecture. See [here](https://courses.cs.washington.edu/courses/cse490h1/19wi/exhibit/john-von-neumann-1.html)): same computer can be used for different objectives based on the program it's running (universality of computer)
 - Memory address space: 15 bits -> have 2^15 (32768 = 32k) locations in the memory 
@@ -184,26 +96,6 @@ Predefined symbols for a special subset of RAM addresses
 
 **Label symbols** are user-defined symbols used to label destinations of `goto` commands. It can only be defined once and can be used anywhere in the program even before the definition.
 **Variable symbols** - assembler chooses an unique memory address starting M[16]
-
-### 3 Different Modes of Memory Access 
-1. Direct addressing: specify address or use a symbol that represents the address
-   - (ex) LOAD R1, 67 // Mem[67] -> R1
-   - (ex) LOAD R1, bar 
-2. Immediate addressing: load constants
-   - (ex) LOADI R1, 67 // 67 -> R1
-3. Indirect addressing: instruction specifies a _memory location_ that contains the target address (i.e. value in a memory location refers to another address, not a data). Used to handle pointers
-   - (ex)
-     > High level: `x = foo[j]`
-     > 
-     > this is `foo` array-> [*| | | | | | | | ] ( `*` represents the base address)
-     >
-     > Machine language translation:
-     >
-     > ADD R1, foo, j // foo + j -> R1
-     >
-     > LOAD* R2, R1   // Mem[R1] -> R2
-     >
-     > STORE R2, x    // R2 -> x 
 
 ### Syntax Conventions & File Format
 - Binary code file: .hack extension, each line = sequence of 16 0s and 1s = 1 machine instruction
@@ -258,59 +150,9 @@ Universal turing machine is a theoretical concept of a machine that can do every
   2. I/O device needs to provide an interaction protocol so that CPU can access the device. (ex) keyboard - which binary code to use for each key? This is where standards make our lives easier!)
 - In modern computer, we don't write bits to memory directly to control I/O devices. Instead, for example, the CPU sends instructions to a graphics card that controls the screen
 
-### Challenges with Von Neumann Architecture, and Harvard Architecture
-I did my own research on this topic and left a small notes in Week 4, but the course touched on this topic this time too. I was right in that Hack follows Harward architecture, but they consider it a variant of Von Neumann. 
-
-#### Fetch - Execute Clash
-- Problem: We need to access the next instruction by supplying the address to the memory. But we also need to access the memory to read/write data as per the current instruction. We only have only 1 memory, so we cannot do both at the same time. 
-- Solution: do one after the other. During the fetch cycle, give the memory an instruction address. The memory emits the instruction immediately (not clocked; althought ROM is a stack of registers, I can read a value out right away as it only needs combinatorial operation for the MUX) and gets stored in the Instruction Register (IR). In the subsequent cycle, the instruction is decoded, and if data needs to be access from the memory, that is done. (_I didn't understand the mention of IR in this context. Why is it really needed? We have to decode the current instruction first in order to pass in data address to read/write data in the memory, so I do not think the current instruction is gonna get overwritten by anything? I did get the answer I was looking for but the best I could find was copied below_)
-> From the internet: There are architectures where it is not needed, but generally the PC supplies an address, the instruction memory is accessed and the value stored in the IR. Then the instruction is decoded while data and (possibly) additional words of the instruction are fetched. In a Harvard Architecture, there are separate instruction and data memories. So the output of the memory could be decoded directly. If this is a RISC architecture where every instruction was one word, there would be be no need for an IR. If an instruction is more than one word, it would have to be stored someplace (in the IR) while the next word is fetched.
-
-- Harvard Architecture also helps with this problem, because of the separate memories for data and instruction so they can be accessed at the same time. It is also good for embedded system [(why?)](https://www.quora.com/Why-do-Arduino-MCUs-use-Harvard-architecture-and-not-Von-Neumann)
-
-Some key terms to google are Harvard Architecture and von Neuman Architecture.
-
-### Something that I often get confused about HACK Computer Platform Architecture
-- 16 bit processor, meaning it has 16-bit register set. Therefore, it takes a 16-bit instruction and data
-- But don't get confused - memory address is *15 bits*. This does have to be 16 bits just because it is a 16-bit computer.
-   - But what if I am using an A instruction with "out-of-scope" memory address? No worries, because the opcode for A instruction (the MSB) is 0.
-- `outM` and `writeM` outputs are combinatorial, `addressM` and `PC` outputs are clocked
-
 ## Week 7 + 8
 Project: Building a VM translator (part 1 - only handles arithmetic and memory segment access operations, part 2 - add branching and subroutine calling to Week 7's version)
-
-### High-level Langauges
-- We program in languages like Java, Python, etc. **How does a computer know how to execute these programs?**
-- HLL programers don't need to worry about the answer to this question thanks to the abstraction (assembler, virtual machine, operating system and compiler are all behind the scene)
-
-### Compilers
-- Purpose: Translates HLL programs (src lang) into machine code (dest lang) so computer can run it
-- Problem: As the number of src lang-dest lang combination increases, the # of compilers that need to be written also increases
-   - ex) high-level code cannot be run on computer hardware as is. We have to convert it into machine code, and this task is hardware-dependent (different architecture uses different assembly/machine code model). So if there is 1 high level program that needs to run on 3 different hardware platform, we need 3 *compilers* in total. Say, there are 2 different high-level langauges, then we need 6 compilers and so on. 
-- **2-tier compilation** breaks this coupling
-   -   The idea of this started back in 1970s with the Pascal compiler that generated P-Code as the intermediate language   
-   -   1st stage: Translate src lang to the intermediate language (only worry about the src lang) -> we still call this a compiler
-   -   2nd stage: Trnaslate the intermediate language to dest lang (only worry about the dest lang) -> VM; sometimes called compiler's backend
-   -   Interface between stage #1 and #2 = intermediate language (aka VM language)
-   - Back to the previous example: now we need 2 translators that convert 2 high-level languages into the intermediate language. Then we need 3 translators to convert the intermediate language to different machine languages. In total, we need 5 translators. Not much difference in this example, but as the number gets larger, it becomes very efficient.
-   - Real life example: Java (bytecode & JVM). In order to execute bytecode programs, the client computers should have suitable JVM implementations ![diagram](2-tier-compilation.JPEG)
-     Microsoft .NET infrastructure & Common Language Runtime(CLR) ![diagram2](clr.JPEG)
-- what gets lost in tranlsation during compilation process:
-   - HLL program ---- (compiler) ----> VM program: notion of class, method and function all become functions; Also multiple files in HLL program turns into a single-file VM program.
-   - VM program ---- (VM Translator) ----> assembly program: VM functions turn into labels in assembly
      
-### Virtual Machine
-- General definition: An abstract computer that is realized on other computer platform
-- In the context of 2-tier compilation: what runs the intermediate code
-- Ways to implement it
-  1. SW interpreters
-  2. Special-purpose HW
-  3. Translating VM code to machine language of the target platform -> this is what we do!
-
-### Benefits of 2-tier Translation Model
-1. Code transportability: VM is easy enough to implement on multiple target platforms. VM-based software can run on many processors, operating systems without source code change
-2. Code sharing and language interoperability: compilers for different HLL's can share the same VM backend. These languages can call each other's libraries, etc
-
 ### Stack-based VM
 - Our VM translator will put operands and results of VM operations in a stack
 - What is a stack? An abstract data structure that has 2 possible operations: push & pop (LIFO; always fetch from or push to the top of the stack)
@@ -325,15 +167,6 @@ Project: Building a VM translator (part 1 - only handles arithmetic and memory s
    - do the operation
    - push the result to the stack
 - Once we deal with subroutines, stack becomes even more useful. The "calling chain" of functions have LIFO pattern (last called funciton executes and returns first), which is the same as the property of a stack
-  
-### Stack Access VS Memory Access
-| stack         | memory           |
-|:-------------:|:-------------:|
-| reading involves popping an element from the top | reading does not change memory state |
-| only accessible from the top, one at a time | can access anywhere in the memory |  
-| do not lose any value when writing | lose the existing value at the location when writing a new value |
-
-Why do we use stack as an abstraction of a memory if they are that different?
 
 ### Our VM Specification
 - stack-based
@@ -374,65 +207,3 @@ introduces non-linear program flow
 
 ### Booting Process
 The compiler's expected to create 1 Main.vm file, which includes 1 VM function called `main`. Given this, the VM implementation is expected to set the SP to 256 and call `Sys.Init`, an argument-less OS function at the start. This `Sys.Init` in turns calls `Main.main` and the infinite loop at the end. Recall that the HACK platform is set up in a way that when it resets, it starts executing the instruction from ROM[0] and so on.
-
-### Things to Consider for VM Implementation
-1. how to map VM data structures (in our case, stack and memory segments?) using the host HW platform -> In other words, how to emulate the VM world on the target platform
-   - our standard mapping looks as follows (we kinda touched on in back in Week 4):
-   - Recall that our RAM is 32k 16-bit word data memory
-      -    virtual registers: RAM[0]-RAM[15]
-            -    RAM[0] = SP
-            -    predefined pointers (SP, LCL, THIS, THAT, ARG) = RAM[0]-RAM[4]
-      -    user variables (static variables): RAM[16]-RAM[255]
-      -    stack = RAM[256]-RAM[2047]
-      -    heap = RAM[2048]-RAM[16483]
-      -    memory-mapped I/O = RAM[16384]-RAM[24576]
-            -    screen: starting RAM[16384]
-            -    keyboard: RAM[24576]
-      -    remaining: ?
-2. how to express VM commands using the host machine language (in our case, HACK assembly language)
-
-### Function Calling Abstraction
-![subroutine diagram](subroutine_calling.JPEG)
-[what is a frame?](https://www.nand2tetris.org/copy-of-nestedcall)
-[what is the global stack?](global_stack.png)
-#### What happens when a function calls another function?
-1. The parameters (arguments) need to be passed from the caller to the callee
-2. The caller is about pause its flow and jump. Where to resume once the callee completes needs to be determined (aka the return address).
-3. The caller's stack and memory segment need to be saved, so when we return, we can pick up from the exact same state
-4. Jump to the callee function
-
-#### What happens when a called function returns?
-In this course, the contract between the caller and callee includes the callee ~always~ pushing the return value to the stack. If it is a void function, it is the caller's job to ignore or discard it.
-1. The callee returns its result to the caller (aka the return value)
-2. The callee's memory resources get recycled
-3. The caller's stack and memory segment get restored using #3 in the [previous section](#part-2-add-branching-and-subroutine-calling-to-Week-7's-version)
-4. Jump to the marked return address
-
-
-So, where is the abstraction in this?
-1. The only net effect of subroutine handling is that the arguments the caller passed to the callee are replaced by the callee's return value. Anything hasn't changed from the caller's point of view.
-2. Whether calling a built-in function or a user-defined function does not matter. It has the same look and feel. It follows the same under-the-hood process described above.
-
-### Function Calling Implementation
-![function_calling](function_calling_implementation.png)
-#### The Caller's Point of View
-- push as many arguments as the callee needs to the stack
-- call the callee using the following syntax: `call <callee's name> <num_args>`
-After returned from the callee it is guaranteed to:
-- have its memory segments (argument, local, static, this, that and pointer) unchanged except the temp segment (which is undefined) and statuc segement (which could have been updated by the callee)
-- resume from where it left off
-- find the return value from the callee at the top of its working stack
-
-#### The Callee's Point of View
-When the function prologue (assembly code generated by `function <func_name> <num_local_vars>`) completes, it is guaranteed to:
-- have its argument segment initialized with actual values from the caller
-- have its local segment allocated and initialized to zeros
-- have its static segment set to the current program's static segment (static segment is a global scope, which means all functions in the same VM program share the same static segment)
-- have its this, that, pointer and temp segments undefined
-  
-Before it returns:
-- it must push a value (return value if expected, or any value if it's a void function) to the stack  
-- finally returns using the following syntax: `return`
-   - but to the callee, the caller is anonymous, and it doesn't know where to return! -> why we have to save the return address along with the other state information
-
-How to make these promises made to the caller and callee happen? VM implementation needs to make it happen!
