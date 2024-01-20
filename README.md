@@ -207,3 +207,25 @@ introduces non-linear program flow
 
 ### Booting Process
 The compiler's expected to create 1 Main.vm file, which includes 1 VM function called `main`. Given this, the VM implementation is expected to set the SP to 256 and call `Sys.Init`, an argument-less OS function at the start. This `Sys.Init` in turns calls `Main.main` and the infinite loop at the end. Recall that the HACK platform is set up in a way that when it resets, it starts executing the instruction from ROM[0] and so on.
+
+## Week 10
+Project: Completing syntax analysis portion of a compiler
+### Typical components of a Compiler
+1. Syntax analysis: objetive is to understand the structure of a program; in our case, the result is JackAnalyzer 
+	1. Lexical analysis: also known as tokenizing or scanning; grouping a steam of character into tokens that have meanings
+	2. parsing: attempting to match the resulting tokens to the syntax rules (grammars) of the language to see if it conforms
+2. Code generation → we do this next week
+
+Note that different languages have different set of tokens. (ex) In C, ++ is a valid token. But in Python it will become two +  tokens
+Programming Language Specification must document the language's allowable tokens.
+### Tokens in Jack Language
+1. keyword
+2. symbols
+3. integer constant
+4. string constant
+5. identifier
+### Grammars
+Having a bunch of valid tokens do not mean it is a working program. The order of tokens is important. The grammar is a set of rules that describe how tokens can be put together to create valid language constructs
+### Parser Logic
+Our parser uses recursive descent parsing without backtracking. It's a top-down approach that is well suited for nested structure Jack language has. Most of the time, we only need to know the current token to figure out what language construct we are dealing with (LL(0)?) with very few exceptions. (while coding up the parser logic, there were some cases where I had to look 1 token ahead)
+
