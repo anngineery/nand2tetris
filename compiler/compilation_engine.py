@@ -4,6 +4,7 @@ Use recursive descent parsing to check a stream of valid tokens against Jack lan
 from typing import List, Tuple
 from enum import Enum
 from tokenizer import TokenType
+from symbol_table import SymbolTable, Category
 
 
 class ProgramConstructType(str, Enum):
@@ -30,12 +31,15 @@ class CompilationEngine:
        self.input = token_stream
        self.output = output_stream
        self.current_token_index = 0
+       self.symbol_table = SymbolTable()
+       self.class_name = None
 
-    def _process_terminal_token(self):
+    def _process_terminal_token(self) -> str:
         token, type = self.input[self.current_token_index]
         self.output.append(f"<{type}> {token} </{type}>")
-        #print(f"<{type}> {token} </{type}>")
         self.current_token_index += 1
+
+        return token
 
     def _compile_subroutine_call(self):
         # look one token ahead to determine if this subroutine call is a method or not
@@ -50,7 +54,7 @@ class CompilationEngine:
     def compile_class(self):
         self.output.append(f"<{ProgramConstructType.CLASS}>")
         self._process_terminal_token()  # "class"
-        self._process_terminal_token()  # class_name
+        self.class_name = self._process_terminal_token()  # class_name
         self._process_terminal_token()  # "{"
 
         # handling 0 or more class variable declaration or subroutine declaration
@@ -64,21 +68,29 @@ class CompilationEngine:
         self._process_terminal_token()  # "}"
         self.output.append(f"</{ProgramConstructType.CLASS}>")
 
+        # FOR DEBUGGING
+        self.symbol_table.print()
+
     def compile_class_var_declaration(self):
+        category, data_type, name = None, None, None
+
         self.output.append(f"<{ProgramConstructType.CLASS_VAR_DECLARATION}>")
-        self._process_terminal_token()  # "static" or "field"
-        self._process_terminal_token()  # type
-        self._process_terminal_token()  # variable name
+        category = self._process_terminal_token()  # "static" or "field"
+        data_type = self._process_terminal_token()  # type
+        name = self._process_terminal_token()  # variable name
+        self.symbol_table.define(name, data_type, Category(category))
 
         # handling optional (0 or more) piece
         while self.input[self.current_token_index] == (",", TokenType.SYMBOL):
             self._process_terminal_token()  # ","
-            self._process_terminal_token()  # variable name
+            name = self._process_terminal_token()  # variable name
+            self.symbol_table.define(name, data_type, Category(category))
         
         self._process_terminal_token()  # ";"
         self.output.append(f"</{ProgramConstructType.CLASS_VAR_DECLARATION}>")
         
     def compile_subroutine(self):
+        self.symbol_table.start_subroutine()
         self.output.append(f"<{ProgramConstructType.SUBROUTINE_DECLARATION}>")
         self._process_terminal_token()  # "constructor", "function" or "method"
         self._process_terminal_token()  # "void" or type
@@ -90,12 +102,16 @@ class CompilationEngine:
         self.output.append(f"</{ProgramConstructType.SUBROUTINE_DECLARATION}>")
 
     def compile_parameter_list(self):
+        # always the object itself is passed as the first argument implicitly
+        self.symbol_table.define("this", self.class_name, Category.ARGUMENT)
+
         self.output.append(f"<{ProgramConstructType.PARAMETER_LIST}>")
         token, type = self.input[self.current_token_index]
         # check if there is at least one parameter
         while token in ["int", "char", "boolean"] or type == TokenType.IDENTIFIER:
-            self._process_terminal_token()  # type
-            self._process_terminal_token()  # variable name
+            data_type = self._process_terminal_token()  # type
+            name = self._process_terminal_token()  # variable name
+            self.symbol_table.define(name, data_type, Category.ARGUMENT)
 
             if self.input[self.current_token_index] == (",", TokenType.SYMBOL):
                 self._process_terminal_token()  # ","
@@ -115,14 +131,16 @@ class CompilationEngine:
 
     def compile_var_declaration(self):
         self.output.append(f"<{ProgramConstructType.VARIABLE_DECLARATION}>")
-        self._process_terminal_token()  # "var"
-        self._process_terminal_token()  # type
-        self._process_terminal_token()  # variable name
+        category = self._process_terminal_token()  # "var"
+        data_type = self._process_terminal_token()  # type
+        name = self._process_terminal_token()  # variable name
+        self.symbol_table.define(name, data_type, Category(category))
 
         # handling optional (0 or more) piece
         while self.input[self.current_token_index] == (",", TokenType.SYMBOL):
             self._process_terminal_token()  # ","
-            self._process_terminal_token()  # variable name
+            name = self._process_terminal_token()  # variable name
+            self.symbol_table.define(name, data_type, Category(category))
         
         self._process_terminal_token()  # ";"
         self.output.append(f"</{ProgramConstructType.VARIABLE_DECLARATION}>")
