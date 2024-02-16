@@ -3,6 +3,12 @@ Jack syntax analyzer that converts the high-level Jack language into the interme
 It does not handle error reporting as it assumes all input conforms to Jack language grammar perfectly.
 The input to JackAnalyzer can be a single file (x.jack) or a directory that contains 1+ jack files. 
 For each .jack file, an output file should have the same name with .xml extension.
+
+Seperation of Responsibilities:
+- Tokenizer's only responsibility is to break down the input file into tokens.
+- CompilationEngine's only responsbility is to structure token streams into a proper program
+    structure using the language grammar specification.
+- JackAnalyzer handles orchestration and file handling (including XML string formatting). Essentially, whatever is temporary and will be replaced by the actual code writer soon is done by JackAnalyzer so the transition is smooth.
 """
 from pathlib import Path
 import sys
@@ -41,13 +47,12 @@ if __name__ == "__main__":
             tokenizer.advance()
 
         # second, the compilation engine structures tokens into a program
-        #print(token_stream)
-        try:
-            engine = CompilationEngine(token_stream, compiled_output)
-            engine.compile_class()
-        except:
-            for line in compiled_output:
+        engine = CompilationEngine(token_stream, compiled_output)
+        engine.compile_class()
 
+        # third, the final xml is generated
+        with open(output_file_name, "w") as file:
+            for line in compiled_output:
                 # convert some symbols used by XMLs to display properly
                 if line == "<symbol> < </symbol>":
                     line = "<symbol> &lt; </symbol>"
@@ -58,16 +63,4 @@ if __name__ == "__main__":
                 elif line == "<symbol> & </symbol>":
                     line = "<symbol> &amp; </symbol>"
 
-                print(line)
-
-        # third, the final xml is generated
-        # with open(output_file_name, "w") as file:
-        #     for line in compiled_output:
-        #         file.write(line + "\n")
-
-"""
-tokenizer's only responsibility is to break down the input file into tokens.
-compilation engine's only responsbility is to structure token streams into a proper program
-structure using the language grammar specification.
-JackAnalyzer handles orchestration and file stuff.
-"""
+                file.write(line + "\n") # I don't bother to use XMLTree and stuff, because this portion will be replaced by code writing anyway
