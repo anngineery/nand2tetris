@@ -36,7 +36,6 @@ if __name__ == "__main__":
 
     for file in files_to_translate:
         token_stream: List[Tuple[str]] = [] # will be filled out by the tokenizer
-        compiled_output = []    # will be filled out by the compilation engine
         output_file_name = file.with_suffix(".xml")
         tokenizer = Tokenizer(file)
 
@@ -46,21 +45,6 @@ if __name__ == "__main__":
             token_stream.append((token, type))
             tokenizer.advance()
 
-        # second, the compilation engine structures tokens into a program
-        engine = CompilationEngine(token_stream, compiled_output)
+        # second, the compilation engine processes the tokens and write a VM program
+        engine = CompilationEngine(token_stream, output_file_name)
         engine.compile_class()
-
-        # third, the final xml is generated
-        with open(output_file_name, "w") as file:
-            for line in compiled_output:
-                # convert some symbols used by XMLs to display properly
-                if line == "<symbol> < </symbol>":
-                    line = "<symbol> &lt; </symbol>"
-                elif line == "<symbol> > </symbol>":
-                    line = "<symbol> &gt; </symbol>"
-                elif line == "<symbol> \" </symbol>":
-                    line = "<symbol> &quot; </symbol>"
-                elif line == "<symbol> & </symbol>":
-                    line = "<symbol> &amp; </symbol>"
-
-                file.write(line + "\n") # I don't bother to use XMLTree and stuff, because this portion will be replaced by code writing anyway

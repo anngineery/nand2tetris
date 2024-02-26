@@ -9,7 +9,7 @@ class Category (str, Enum):
     STATIC ="static"
     FIELD = "field"
     ARGUMENT = "argument"
-    VARIALBE = "var"
+    VARIALBE = "var"    # can't call it "variable", bc of the Jack language syntax
 
 
 class SymbolTable:
