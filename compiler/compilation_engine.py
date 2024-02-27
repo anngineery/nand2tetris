@@ -12,27 +12,10 @@ from uuid import uuid4
 
 category_to_memory_segment_mapping = {
     Category.ARGUMENT: MemorySegment.ARG,
-    Category.FIELD: MemorySegment.THIS,
+    Category.FIELD: MemorySegment.THIS, # TODO: set Pointer 0 (This) first and then...
     Category.STATIC: MemorySegment.STATIC,
     Category.VARIALBE: MemorySegment.LOCAL,
 }
-
-class ProgramConstructType(str, Enum):
-    CLASS = "class"
-    CLASS_VAR_DECLARATION = "classVarDec"
-    SUBROUTINE_DECLARATION = "subroutineDec"
-    PARAMETER_LIST = "parameterList"
-    SUBROUTINE_BODY = "subroutineBody"
-    VARIABLE_DECLARATION = "varDec"
-    STATEMENTS = "statements"
-    LET_STATEMENT = "letStatement"
-    IF_STATEMENT = "ifStatement"
-    WHILE_STATEMENT = "whileStatement"
-    DO_STATEMENT = "doStatement"
-    RETURN_STATEMENT = "returnStatement"
-    EXPRESSION = "expression"
-    EXPRESSION_LIST = "expressionList"
-    TERM = "term"
 
 
 class CompilationEngine:
@@ -40,30 +23,35 @@ class CompilationEngine:
        self.input = token_stream
        self.current_token_index = 0
        self.symbol_table = SymbolTable()
-       self.class_name = None
+       self.current_class_name = None
+       self.current_subroutine_name = None
        self.vm_writer = VMWriter(output_file_path)
 
     def _process_terminal_token(self) -> str:
         token, type = self.input[self.current_token_index]
-        #self.output.append(f"<{type}> {token} </{type}>")
         self.current_token_index += 1
 
         return token
 
     def _compile_subroutine_call(self):
         # look one token ahead to determine if this subroutine call is a method or not
+        name = None
+
         if self.input[self.current_token_index + 1] == (".", TokenType.SYMBOL):
-            self._process_terminal_token()  # class name or variable name
+            name = self._process_terminal_token()  # class name or variable name
             self._process_terminal_token()  # "."
-        self._process_terminal_token()  # subroutine name
+        subroutine_name = self._process_terminal_token()  # subroutine name
         self._process_terminal_token()  # "("
-        self.compile_expression_list()
+        num_args = self.compile_expression_list()
         self._process_terminal_token()  # ")"
 
+        self.vm_writer.write_call(
+            f"{name or self.current_class_name}.{subroutine_name}", num_args   # TODO: revisit this later
+        )
+
     def compile_class(self):
-        #self.output.append(f"<{ProgramConstructType.CLASS}>")
         self._process_terminal_token()  # "class"
-        self.class_name = self._process_terminal_token()  # class_name
+        self.current_class_name = self._process_terminal_token()  # class_name
         self._process_terminal_token()  # "{"
 
         # handling 0 or more class variable declaration or subroutine declaration
@@ -75,7 +63,6 @@ class CompilationEngine:
                 self.compile_subroutine()
 
         self._process_terminal_token()  # "}"
-        #self.output.append(f"</{ProgramConstructType.CLASS}>")
         self.vm_writer.close()
 
         # FOR DEBUGGING
@@ -84,7 +71,6 @@ class CompilationEngine:
     def compile_class_var_declaration(self):
         category, data_type, name = None, None, None
 
-        #self.output.append(f"<{ProgramConstructType.CLASS_VAR_DECLARATION}>")
         category = self._process_terminal_token()  # "static" or "field"
         data_type = self._process_terminal_token()  # type
         name = self._process_terminal_token()  # variable name
@@ -97,25 +83,21 @@ class CompilationEngine:
             self.symbol_table.define(name, data_type, Category(category))
         
         self._process_terminal_token()  # ";"
-        #self.output.append(f"</{ProgramConstructType.CLASS_VAR_DECLARATION}>")
         
     def compile_subroutine(self):
         self.symbol_table.start_subroutine()
-        #self.output.append(f"<{ProgramConstructType.SUBROUTINE_DECLARATION}>")
-        self._process_terminal_token()  # "constructor", "function" or "method"
+        subroutine_type = self._process_terminal_token()  # "constructor", "function" or "method"
         self._process_terminal_token()  # "void" or type
-        self._process_terminal_token()  # subroutine name
+        self.current_subroutine_name = self._process_terminal_token()  # subroutine name
         self._process_terminal_token()  # "("
-        self.compile_parameter_list()
+        if subroutine_type in ["constructor", "method"]:
+            # always the object itself is passed as the first argument implicitly
+            self.symbol_table.define("this", self.current_class_name, Category.ARGUMENT)
+        self.compile_parameter_list()   # this fills up the subroutine symbol table with args
         self._process_terminal_token()  # ")"
         self.compile_subroutine_body()
-        #self.output.append(f"</{ProgramConstructType.SUBROUTINE_DECLARATION}>")
 
     def compile_parameter_list(self):
-        # always the object itself is passed as the first argument implicitly
-        self.symbol_table.define("this", self.class_name, Category.ARGUMENT)
-
-        #self.output.append(f"<{ProgramConstructType.PARAMETER_LIST}>")
         token, type = self.input[self.current_token_index]
         # check if there is at least one parameter
         while token in ["int", "char", "boolean"] or type == TokenType.IDENTIFIER:
@@ -127,20 +109,22 @@ class CompilationEngine:
                 self._process_terminal_token()  # ","
 
             token, type = self.input[self.current_token_index]
-        #self.output.append(f"</{ProgramConstructType.PARAMETER_LIST}>")
 
     def compile_subroutine_body(self):
-        #self.output.append(f"<{ProgramConstructType.SUBROUTINE_BODY}>")
         self._process_terminal_token()  # "{"
         # 0 or more variable declaration
         while self.input[self.current_token_index] == ("var", TokenType.KEYWORD): 
-            self.compile_var_declaration()  
+            self.compile_var_declaration()  # this fills up the subroutine symbol table with vars (locals)
+    
+        num_locals = self.symbol_table.count_variables(Category.VARIALBE)
+        self.vm_writer.write_function(
+            f"{self.current_class_name}.{self.current_subroutine_name}", num_locals
+        )
+
         self.compile_statements()
         self._process_terminal_token()  # "}"
-        #self.output.append(f"</{ProgramConstructType.SUBROUTINE_BODY}>")
 
     def compile_var_declaration(self):
-        #self.output.append(f"<{ProgramConstructType.VARIABLE_DECLARATION}>")
         category = self._process_terminal_token()  # "var"
         data_type = self._process_terminal_token()  # type
         name = self._process_terminal_token()  # variable name
@@ -153,10 +137,8 @@ class CompilationEngine:
             self.symbol_table.define(name, data_type, Category(category))
         
         self._process_terminal_token()  # ";"
-        #self.output.append(f"</{ProgramConstructType.VARIABLE_DECLARATION}>")
 
     def compile_statements(self):
-        #self.output.append(f"<{ProgramConstructType.STATEMENTS}>")
         token, type = self.input[self.current_token_index]
 
         # handle 0 or more various types of statements
@@ -174,14 +156,10 @@ class CompilationEngine:
 
             token, type = self.input[self.current_token_index]
 
-        #self.output.append(f"</{ProgramConstructType.STATEMENTS}>")
-
     def compile_do(self):
-        #self.output.append(f"<{ProgramConstructType.DO_STATEMENT}>")
         self._process_terminal_token()  # "do"
         self._compile_subroutine_call()
         self._process_terminal_token()  # ";"
-        #self.output.append(f"</{ProgramConstructType.DO_STATEMENT}>")
 
     def compile_let(self):
         self._process_terminal_token()  # "let"
@@ -198,8 +176,6 @@ class CompilationEngine:
         category = self.symbol_table.which_category(var_name)
         index = self.symbol_table.which_index(var_name)
         self.vm_writer.write_pop(category_to_memory_segment_mapping[category], index)
-
-
 
     def compile_while(self):
         unique_id = uuid4()
@@ -228,13 +204,12 @@ class CompilationEngine:
         self.vm_writer.write_label(while_completed_label)
 
     def compile_return(self):
-        #self.output.append(f"<{ProgramConstructType.RETURN_STATEMENT}>")
         self._process_terminal_token()  # "return"
         # 0 or 1 expression can follow after the "return" keyword
         if self.input[self.current_token_index] != (";", TokenType.SYMBOL):
             self.compile_expression()
         self._process_terminal_token()  # ";"
-        #self.output.append(f"</{ProgramConstructType.RETURN_STATEMENT}>")
+        self.vm_writer.write_return()
 
     def compile_if(self):
         unique_id = uuid4()
@@ -273,29 +248,31 @@ class CompilationEngine:
         self.vm_writer.write_label(if_completed_label_name)
 
     def compile_expression(self):
-        #self.output.append(f"<{ProgramConstructType.EXPRESSION}>")
         self.compile_term()
         token, type = self.input[self.current_token_index]
         while token in ["+", "-", "*", "/", "&", "|", "<", ">", "="] and type == TokenType.SYMBOL:
             self._process_terminal_token()  # operator
             self.compile_term()
-            temp_mapping = {
-                "+": ArithmeticCommand.ADD,
-                "-": ArithmeticCommand.SUB,
-                "*": "multiply",    # TODO
-                "/": "divide",      # TODO,
-                "&": ArithmeticCommand.AND,
-                "|": ArithmeticCommand.OR,
-                "<": ArithmeticCommand.LT,
-                ">": ArithmeticCommand.GT,
-                "=": ArithmeticCommand.EQ,
-            }
-            self.vm_writer.write_arithmetic(temp_mapping[token])
+
+            if token == "*":
+                self.vm_writer.write_call("Math.multiply", 2)
+            elif token == "/":
+                self.vm_writer.write_call("Math.divide", 2)
+            else:
+                mapping = {
+                    "+": ArithmeticCommand.ADD,
+                    "-": ArithmeticCommand.SUB,
+                    "&": ArithmeticCommand.AND,
+                    "|": ArithmeticCommand.OR,
+                    "<": ArithmeticCommand.LT,
+                    ">": ArithmeticCommand.GT,
+                    "=": ArithmeticCommand.EQ,
+                }
+                self.vm_writer.write_arithmetic(mapping[token])
+            
             token, type = self.input[self.current_token_index]
-        #self.output.append(f"</{ProgramConstructType.EXPRESSION}>")
 
     def compile_term(self):
-        #self.output.append(f"<{ProgramConstructType.TERM}>")
         token, type = self.input[self.current_token_index]
         if type == TokenType.INT_CONST:
             int_value = self._process_terminal_token() 
@@ -310,10 +287,8 @@ class CompilationEngine:
 
             if keyword == "true":
                 self.vm_writer.write_push(MemorySegment.CONSTANT, -1)
-            elif keyword == "false":
+            elif keyword in ["false", "null"]:
                 self.vm_writer.write_push(MemorySegment.CONSTANT, 0)
-            elif keyword == "null":
-                pass    # TODO
             else:
                 self.vm_writer.write_push(MemorySegment.ARG, 0)
         
@@ -353,12 +328,14 @@ class CompilationEngine:
         
         else:
             raise ValueError(f"{token} is not a valid term")
-        #self.output.append(f"</{ProgramConstructType.TERM}>")
 
-    def compile_expression_list(self):
-        #self.output.append(f"<{ProgramConstructType.EXPRESSION_LIST}>")
+    def compile_expression_list(self) -> int:
+        num_args = 0
+
         while self.input[self.current_token_index] != (")", TokenType.SYMBOL):
             self.compile_expression()
+            num_args += 1
             if self.input[self.current_token_index] == (",", TokenType.SYMBOL):
                 self._process_terminal_token()
-        #self.output.append(f"</{ProgramConstructType.EXPRESSION_LIST}>")
+
+        return num_args

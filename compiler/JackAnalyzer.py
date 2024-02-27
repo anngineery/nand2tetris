@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     for file in files_to_translate:
         token_stream: List[Tuple[str]] = [] # will be filled out by the tokenizer
-        output_file_name = file.with_suffix(".xml")
+        output_file_name = file.with_suffix(".vm")
         tokenizer = Tokenizer(file)
 
         # first, the tokenizer extracts the stream of tokens from the input file

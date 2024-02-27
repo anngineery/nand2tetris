@@ -51,13 +51,13 @@ class VMWriter:
         pass
 
     def write_call(self, name: str, num_args: int):
-        pass
+        self.fp.write(f"call {name} {num_args}\n")
 
     def write_function(self, name: str, num_locals: int):
-        pass
+        self.fp.write(f"function {name} {num_locals}\n")
 
     def write_return(self):
-        pass
+        self.fp.write("return\n")
 
     def close(self):
         self.fp.close()
