@@ -42,13 +42,13 @@ class VMWriter:
         self.fp.write(f"{command}\n")
 
     def write_label(self, label: str):
-        pass
+        self.fp.write(f"label {label}\n")
 
     def write_goto(self, label: str):
-        pass
+        self.fp.write(f"goto {label}\n")
 
     def write_if_goto(self, label: str):
-        pass
+        self.fp.write(f"if-goto {label}\n")
 
     def write_call(self, name: str, num_args: int):
         self.fp.write(f"call {name} {num_args}\n")

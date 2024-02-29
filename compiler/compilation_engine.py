@@ -188,7 +188,7 @@ class CompilationEngine:
         self._process_terminal_token()  # "("
 
         self.compile_expression()   # the result of expression should be at the top
-        self.vm_writer.write_arithmetic(ArithmeticCommand.NEG)  # !(expression)
+        self.vm_writer.write_arithmetic(ArithmeticCommand.NOT)  # !(expression)
         # if !(expression) = -1, then (expression) = 0 -> should exit the loop
         self.vm_writer.write_if_goto(while_completed_label)
 
@@ -214,14 +214,14 @@ class CompilationEngine:
     def compile_if(self):
         unique_id = uuid4()
         if_true_label_name = f"if-true-{unique_id}"
-        if_false_label_name = f"if-true-{unique_id}"
+        if_false_label_name = f"if-false-{unique_id}"
         if_completed_label_name = f"if-completed-{unique_id}"
 
         self._process_terminal_token()  # "if"
         self._process_terminal_token()  # "("
 
         self.compile_expression()   # the result of expression should be at the top of the stack
-        self.vm_writer.write_arithmetic(ArithmeticCommand.NEG)  # this gives !(expression)
+        self.vm_writer.write_arithmetic(ArithmeticCommand.NOT)  # this gives !(expression)
         # if !(expression) = -1, it means (expression) = 0, so we need to hit the else statement
         self.vm_writer.write_if_goto(if_false_label_name)   
 
@@ -286,7 +286,8 @@ class CompilationEngine:
             keyword = self._process_terminal_token() 
 
             if keyword == "true":
-                self.vm_writer.write_push(MemorySegment.CONSTANT, -1)
+                self.vm_writer.write_push(MemorySegment.CONSTANT, 1)
+                self.vm_writer.write_arithmetic(ArithmeticCommand.NEG)  # we constant "segment" does not have negative numbers
             elif keyword in ["false", "null"]:
                 self.vm_writer.write_push(MemorySegment.CONSTANT, 0)
             else:
