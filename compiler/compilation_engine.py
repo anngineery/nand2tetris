@@ -12,7 +12,7 @@ from uuid import uuid4
 
 category_to_memory_segment_mapping = {
     Category.ARGUMENT: MemorySegment.ARG,
-    Category.FIELD: MemorySegment.THIS, # TODO: set Pointer 0 (This) first and then...
+    Category.FIELD: MemorySegment.THIS,
     Category.STATIC: MemorySegment.STATIC,
     Category.VARIALBE: MemorySegment.LOCAL,
 }
@@ -35,18 +35,36 @@ class CompilationEngine:
 
     def _compile_subroutine_call(self):
         # look one token ahead to determine if this subroutine call is a method or not
-        name = None
+        num_args = 0
 
         if self.input[self.current_token_index + 1] == (".", TokenType.SYMBOL):
-            name = self._process_terminal_token()  # class name or variable name
+            # class name (meaning the subroutine is a function) or variable name (meaning it is a method)
+            name = self._process_terminal_token()  
             self._process_terminal_token()  # "."
+            category = self.symbol_table.which_category(name)
+
+            if category:  # found in symbol table, so it must be an object name
+                index = self.symbol_table.which_index(name)
+                num_args = 1
+                # since object name was used, it must be a method and we need to pass the object as arg 0
+                self.vm_writer.write_push(category_to_memory_segment_mapping[category], index)
+
+            class_name = self.symbol_table.which_data_type(name) or name
+
+        else:
+            # if a subsroutine with no class or object name specified, it means
+            # it is a method call on this current object
+            class_name = self.current_class_name
+            num_args = 1    # "this" is being passed at least
+            self.vm_writer.write_push(MemorySegment.POINTER, 0)
+        
         subroutine_name = self._process_terminal_token()  # subroutine name
         self._process_terminal_token()  # "("
-        num_args = self.compile_expression_list()
+        num_args += self.compile_expression_list()
         self._process_terminal_token()  # ")"
 
         self.vm_writer.write_call(
-            f"{name or self.current_class_name}.{subroutine_name}", num_args   # TODO: revisit this later
+            f"{class_name}.{subroutine_name}", num_args
         )
 
     def compile_class(self):
@@ -64,9 +82,6 @@ class CompilationEngine:
 
         self._process_terminal_token()  # "}"
         self.vm_writer.close()
-
-        # FOR DEBUGGING
-        self.symbol_table.print()
 
     def compile_class_var_declaration(self):
         category, data_type, name = None, None, None
@@ -90,12 +105,16 @@ class CompilationEngine:
         self._process_terminal_token()  # "void" or type
         self.current_subroutine_name = self._process_terminal_token()  # subroutine name
         self._process_terminal_token()  # "("
-        if subroutine_type in ["constructor", "method"]:
+        if subroutine_type == "method":
             # always the object itself is passed as the first argument implicitly
             self.symbol_table.define("this", self.current_class_name, Category.ARGUMENT)
         self.compile_parameter_list()   # this fills up the subroutine symbol table with args
         self._process_terminal_token()  # ")"
-        self.compile_subroutine_body()
+        self.compile_subroutine_body(subroutine_type)
+
+        # FOR DEBUGGING
+        print(f"{self.current_class_name}.{self.current_subroutine_name}")
+        self.symbol_table.print()
 
     def compile_parameter_list(self):
         token, type = self.input[self.current_token_index]
@@ -110,7 +129,7 @@ class CompilationEngine:
 
             token, type = self.input[self.current_token_index]
 
-    def compile_subroutine_body(self):
+    def compile_subroutine_body(self, subroutine_type: str):
         self._process_terminal_token()  # "{"
         # 0 or more variable declaration
         while self.input[self.current_token_index] == ("var", TokenType.KEYWORD): 
@@ -120,6 +139,23 @@ class CompilationEngine:
         self.vm_writer.write_function(
             f"{self.current_class_name}.{self.current_subroutine_name}", num_locals
         )
+
+        if subroutine_type == "method":
+            self.vm_writer.write_push(MemorySegment.ARG, 0)
+            self.vm_writer.write_pop(MemorySegment.POINTER, 0)  # anchor it to arg 0 (this)
+
+        elif subroutine_type == "constructor":
+            # Step 1: get the number of fields in this object to determine memory space required
+            # every field, regardless of its data type, takes up 1 word
+            # ex) int, char, bool -> 1 word
+            # for an object as a field, it is also 1 word, bc it will be a pointer to it
+            # (a constructor gets called inside a constructor, which returns the object base addr)
+            memory_space_required = self.symbol_table.count_variables(Category.FIELD)
+            self.vm_writer.write_push(MemorySegment.CONSTANT, memory_space_required)
+            # allocate the space in the heap
+            self.vm_writer.write_call("Memory.alloc", 1)    # base addr of the object on the top of the stack
+            self.vm_writer.write_pop(MemorySegment.POINTER, 0)  # anchor it to THIS
+        
 
         self.compile_statements()
         self._process_terminal_token()  # "}"
@@ -160,6 +196,9 @@ class CompilationEngine:
         self._process_terminal_token()  # "do"
         self._compile_subroutine_call()
         self._process_terminal_token()  # ";"
+
+        # the subroutine call will return a garbage value. Store it in temp and ignore
+        self.vm_writer.write_pop(MemorySegment.TEMP, 0)
 
     def compile_let(self):
         self._process_terminal_token()  # "let"
@@ -207,7 +246,11 @@ class CompilationEngine:
         self._process_terminal_token()  # "return"
         # 0 or 1 expression can follow after the "return" keyword
         if self.input[self.current_token_index] != (";", TokenType.SYMBOL):
-            self.compile_expression()
+            self.compile_expression()   # return value is already pushed to the top of the stack by this
+        else:
+            # if it is a void func, return 0, which will get ignored by the caller
+            self.vm_writer.write_push(MemorySegment.CONSTANT, 0)
+        
         self._process_terminal_token()  # ";"
         self.vm_writer.write_return()
 
@@ -235,12 +278,12 @@ class CompilationEngine:
 
         self._process_terminal_token()  # "}"
 
+        # when if was false, we will be here
+        self.vm_writer.write_label(if_false_label_name)
         if self.input[self.current_token_index] == ("else", TokenType.KEYWORD):
             self._process_terminal_token()  # "else"
             self._process_terminal_token()  # "{"
 
-            # when if was false, we will be here
-            self.vm_writer.write_label(if_false_label_name)
             self.compile_statements()
 
             self._process_terminal_token()  # "}"
@@ -291,7 +334,10 @@ class CompilationEngine:
             elif keyword in ["false", "null"]:
                 self.vm_writer.write_push(MemorySegment.CONSTANT, 0)
             else:
-                self.vm_writer.write_push(MemorySegment.ARG, 0)
+                # could be in the 1st arg (in which case, should be found in the table)
+                # or the constructor returning the new object
+                # TODO - REVISIT category = self.symbol_table.which_category("this")
+                self.vm_writer.write_push(MemorySegment.POINTER, 0) 
         
         elif type == TokenType.SYMBOL:
             if token in ["-", "~"]:
