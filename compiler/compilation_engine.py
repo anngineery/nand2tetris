@@ -9,7 +9,8 @@ from vm_writer import VMWriter, MemorySegment, ArithmeticCommand
 from pathlib import Path
 from uuid import uuid4
 
-
+#TODO: why do we need "this" in the symbol table if we can get away with hardcoding stuff for handling
+# it??
 category_to_memory_segment_mapping = {
     Category.ARGUMENT: MemorySegment.ARG,
     Category.FIELD: MemorySegment.THIS,
@@ -66,6 +67,20 @@ class CompilationEngine:
         self.vm_writer.write_call(
             f"{class_name}.{subroutine_name}", num_args
         )
+
+    def _compile_array_index(self, category: Category, index: int) -> bool:
+        # handling optional (0 or 1) pieces for an array
+        if self.input[self.current_token_index] == ("[", TokenType.SYMBOL):
+            self.vm_writer.write_push(category_to_memory_segment_mapping[category], index)  # base addr of the array
+            self._process_terminal_token()  # "["
+            self.compile_expression()   # this should result in the index?
+            self._process_terminal_token()  # "]"
+
+            self.vm_writer.write_arithmetic(ArithmeticCommand.ADD)  # results in the addr of the array + i
+            self.vm_writer.write_pop(MemorySegment.POINTER, 1)  # anchor (array + i) addr to THAT
+
+            return True
+        return False
 
     def compile_class(self):
         self._process_terminal_token()  # "class"
@@ -156,7 +171,6 @@ class CompilationEngine:
             self.vm_writer.write_call("Memory.alloc", 1)    # base addr of the object on the top of the stack
             self.vm_writer.write_pop(MemorySegment.POINTER, 0)  # anchor it to THIS
         
-
         self.compile_statements()
         self._process_terminal_token()  # "}"
 
@@ -203,18 +217,27 @@ class CompilationEngine:
     def compile_let(self):
         self._process_terminal_token()  # "let"
         var_name = self._process_terminal_token()  # variable name
+        category = self.symbol_table.which_category(var_name)
+        index = self.symbol_table.which_index(var_name)
+
         # handling optional (0 or 1) pieces for an array
-        if self.input[self.current_token_index] == ("[", TokenType.SYMBOL):
-            self._process_terminal_token()  # "["
-            self.compile_expression()   # this should result in the index?
-            self._process_terminal_token()  # "]"
+        is_array = self._compile_array_index(category, index)
+
+        if is_array:
+            self.vm_writer.write_push(MemorySegment.POINTER, 1)  # push (array + i) addr
+            # temporarily store it until we process RHS expression, which also could be an array
+            self.vm_writer.write_pop(MemorySegment.TEMP, 0)  
+
         self._process_terminal_token()  # "="
         self.compile_expression()   # the result is at the top of the stack now
         self._process_terminal_token()  # ";"
 
-        category = self.symbol_table.which_category(var_name)
-        index = self.symbol_table.which_index(var_name)
-        self.vm_writer.write_pop(category_to_memory_segment_mapping[category], index)
+        if is_array:
+            self.vm_writer.write_push(MemorySegment.TEMP, 0)  
+            self.vm_writer.write_pop(MemorySegment.POINTER, 1)  # anchor (array + i) to THAT
+            self.vm_writer.write_pop(MemorySegment.THAT, 0)
+        else:       
+            self.vm_writer.write_pop(category_to_memory_segment_mapping[category], index)
 
     def compile_while(self):
         unique_id = uuid4()
@@ -322,8 +345,14 @@ class CompilationEngine:
             self.vm_writer.write_push(MemorySegment.CONSTANT, int_value)
 
         elif type == TokenType.STR_CONST:
-            self._process_terminal_token() 
-            # TODO: is string treated like an array of chars?
+            string_constant = self._process_terminal_token() 
+            length = len(string_constant)
+            self.vm_writer.write_push(MemorySegment.CONSTANT, length)
+            self.vm_writer.write_call("String.new", 1)  # this will put the base addr at the top
+
+            for i in range(length):
+                self.vm_writer.write_push(MemorySegment.CONSTANT, ord(string_constant[i]))
+                self.vm_writer.write_call("String.appendChar", 2)  # returns the string after appending
         
         elif type == TokenType.KEYWORD and token in ["true", "false", "null", "this"]:
             keyword = self._process_terminal_token() 
@@ -336,7 +365,6 @@ class CompilationEngine:
             else:
                 # could be in the 1st arg (in which case, should be found in the table)
                 # or the constructor returning the new object
-                # TODO - REVISIT category = self.symbol_table.which_category("this")
                 self.vm_writer.write_push(MemorySegment.POINTER, 0) 
         
         elif type == TokenType.SYMBOL:
@@ -366,12 +394,14 @@ class CompilationEngine:
                 var_name = self._process_terminal_token() 
                 category = self.symbol_table.which_category(var_name)
                 index = self.symbol_table.which_index(var_name)
-                self.vm_writer.write_push(category_to_memory_segment_mapping[category], index)
 
-                if self.input[self.current_token_index] == ("[", TokenType.SYMBOL):
-                    self._process_terminal_token()  # "["
-                    self.compile_expression()
-                    self._process_terminal_token()  # "]"
+                is_array = self._compile_array_index(category, index)
+
+                if is_array:
+                    self.vm_writer.write_push(MemorySegment.THAT, 0)
+                else:
+                    self.vm_writer.write_push(category_to_memory_segment_mapping[category], index)
+
         
         else:
             raise ValueError(f"{token} is not a valid term")
