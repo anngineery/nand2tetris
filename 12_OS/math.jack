@@ -1,0 +1,99 @@
+class Math {
+    function void init() {
+        static Array twoToThe;     
+        var int j;
+        
+        let j = 1;
+        let twoToThe[0] = 1;
+
+        while (j < 16){
+            let twoToThe[j] = 2 * twoToThe[j-1];
+            let j = j + 1;
+        }
+    }
+
+    function boolean bit(int x, int j) {
+        /* private function that is only for internal use */
+        var int temp;
+        let temp = x & twoToThe[j];
+
+        if (temp>0){
+            Return true;
+        }
+
+        Return false;
+    }
+ 
+    function int multiply(int x, int y) {
+        /* use long multiply algorithm, which gives O(logN) runtime
+            for N-bit binary num */
+        // TODO: overflow handling
+        var int sum;
+        var int shiftedX;
+        var j;
+
+        let sum = 0;
+        let shiftedX = x;
+        let j = 0;
+
+        while (j < 16) {
+            if (bit(y, j)) {
+                let sum = sum + shiftedX;
+            }
+
+            let shiftedX = shiftedX * 2;
+            let j = j + 1; 
+        }
+
+        Return sum;
+    }
+
+    function int divde(int x, int y) {
+        /* use long division algorithm, which gives O(logN) runtime
+            for N-bit binary num */
+        // TODO: overflow handling
+        var int q;
+
+        if (y > x) {
+            Return 0;
+        }
+        
+        let q = divide(x, 2*y);
+        
+        if (x-2*q*y < y){
+            Return 2*q;
+        else{
+            Return 2*q+1;
+        }
+    }
+
+    function int abs(int x) {
+        if (x >= 0){
+            Return x;
+        }
+        else {
+            Return -1 * x;
+        }
+    }
+    
+    function int min(int x, int y) {
+        if (x<y){
+            Return x;
+        }
+        else {
+            Return y;
+        }
+    
+    function int max(int x, int y) {
+        if (x<y){
+            Return y;
+        }
+        else {
+            Return x;
+        }
+
+    function int sqrt(int x){
+        // TODO
+    }
+}
+

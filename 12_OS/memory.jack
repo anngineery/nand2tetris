@@ -1,0 +1,46 @@
+/*
+A library for managing the RAM. alloc() and dealloc() functions 
+manage the heap specifically. 
+
+For the heap management, a linked list of free block structures is used.
+(ex) freeListPtr --> free block 1 --> free block 2 --> ...
+    structure of a free block:
+    | nxt ptr |
+    | size    |
+    | data    |
+    | ...     |
+    -----------
+*/
+class Memory {
+    static Array ram;
+    static Array heap;
+    static int freeListPtr;
+ 
+    function void init(){
+        var heapBase = 2048; // agreed upon heap base address
+        var heapSize = 14335;
+
+        let ram = 0; // make 1st element to be addr 0
+        let heap = heapBase; 
+        let freeListPtr = heap;
+        // at initialization, the whole heap is a free block
+        let heap[0] = null; 
+        let heap[1] = heapSize;
+    }
+
+    function int peek(int address){
+        Return ram[address];
+    }
+
+    function void poke(int address, int value){
+        let ram[address] = value;
+    }
+
+    function Array alloc(int size){
+        // TODO: choose between first-fit or best-fit method
+    }
+
+    function void deAlloc(Array object){
+        // TODO: choose whether I want to coalesce free blocks
+    }
+}
