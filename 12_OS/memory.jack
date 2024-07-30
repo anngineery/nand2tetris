@@ -14,7 +14,7 @@ For the heap management, a linked list of free block structures is used.
 class Memory {
     static Array ram;
     static Array heap;
-    static int freeListPtr;
+    static int freeListPtr; // contains absolute RAM addr, not relative heap addr
  
     function void init(){
         var heapBase = 2048; // agreed upon heap base address
@@ -37,7 +37,43 @@ class Memory {
     }
 
     function Array alloc(int size){
-        // TODO: choose between first-fit or best-fit method
+        /* traverse the freeBlock LL and find the first free block
+        that can fit the data of size _size_ */
+        var Array currentFreeBlock, prevFreeBlock, nextFreeBlock;
+        var int currentFreeBlockSize;
+
+        let prevFreeBlock = null;
+        let currentFreeBlock = ram[freeListPtr]; // first free block
+        let nextFreeBlock = currentFreeBlock[0];
+
+        while (nextFreeBlock != null){
+            if (currentFreeBlock[1] + 2 == size){    // 2 words is the overhead of the struct
+                if (prevFreeBlock == null){ // means, it was a hit at the first try
+                    // the first block needs to be removed
+                    let freeListPtr = nextFreeBlock;
+                }
+                else{
+                    let prevFreeBlock[0] = nextFreeBlock;
+                }
+                
+                Return currentFreeBlock;
+            }
+            if (currentFreeBlock[1] + 2 > size){    // 2 words is the overhead of the struct
+                // no need to remove this block from LL, but need to adjust the nextPtr and size
+                let currentFreeBlockSize = currentFreeBlock[1];
+                let currentFreeBlock = currentFreeBlock + size; 
+                let currentFreeBlock[0] = nextFreeBlock;
+                let currentFreeBlock[1] = currentFreeBlockSize - size;
+                let prevFreeBlock[0] = currentFreeBlock; 
+
+                Return currentFreeBlock-size;
+            }
+
+            // traverse the LL
+            let prevFreeBlock = currentFreeBlock;
+            let currentFreeBlock = nextFreeBlock;
+            let nextFreeBlock = currentFreeBlock[0];
+        }
     }
 
     function void deAlloc(Array object){
