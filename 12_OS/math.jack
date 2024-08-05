@@ -93,7 +93,19 @@ class Math {
         }
 
     function int sqrt(int x){
-        // TODO
-    }
+        // if y = sqrt(x), then y^2 = x, plus, sqrt is monotonically increasing
+        // find y such that y^2 <= x <= (y+1)^2
+        var int y;
+        var int j;
+        let j = 7;  // n = 16, n/2 - 1
+        let y = 0;
+
+        while (j >= 0){
+            if (multiply(y + twoToThe[j], y + twoToThe[j]) <= x){
+                let y = y + twoToThe[j];
+            }
+        }
+
+        return y;
 }
 
