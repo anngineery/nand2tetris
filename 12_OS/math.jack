@@ -27,7 +27,6 @@ class Math {
     function int multiply(int x, int y) {
         /* use long multiply algorithm, which gives O(logN) runtime
             for N-bit binary num */
-        // TODO: overflow handling
         var int sum;
         var int shiftedX;
         var j;
@@ -51,10 +50,10 @@ class Math {
     function int divde(int x, int y) {
         /* use long division algorithm, which gives O(logN) runtime
             for N-bit binary num */
-        // TODO: overflow handling
         var int q;
 
-        if (y > x) {
+        // y can overflow and become negative as we multiply by 2
+        if ((y > x) | (y < 0)) {
             Return 0;
         }
         
@@ -97,11 +96,15 @@ class Math {
         // find y such that y^2 <= x <= (y+1)^2
         var int y;
         var int j;
+        var y_2j_squared;
         let j = 7;  // n = 16, n/2 - 1
         let y = 0;
 
         while (j >= 0){
-            if (multiply(y + twoToThe[j], y + twoToThe[j]) <= x){
+            let y_2j_squared = multiply(y + twoToThe[j], y + twoToThe[j]);
+
+            // y_2j_squared can overflow and be a negative number, so check if it is positive
+            if ((y_2j_squared <= x) & (y_2j_squared > 0)){
                 let y = y + twoToThe[j];
             }
         }
