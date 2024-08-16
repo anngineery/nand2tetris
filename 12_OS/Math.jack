@@ -1,6 +1,7 @@
 class Math {
+    static Array twoToThe;     
+
     function void init() {
-        static Array twoToThe;     
         var int j;
         
         let j = 1;
