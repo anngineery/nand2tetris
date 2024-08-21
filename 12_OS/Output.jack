@@ -296,6 +296,7 @@ class Output {
         else{
             let cursorCol = cursorCol - 1;
         }
+        do Output.moveCursor(cursorCol, cursorRow);
     }
 }
 
