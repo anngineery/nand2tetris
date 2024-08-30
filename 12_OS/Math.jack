@@ -5,12 +5,15 @@ class Math {
         var int j;
         
         let j = 1;
+		let twoToThe = Array.new(16);
         let twoToThe[0] = 1;
 
         while (j < 16){
-            let twoToThe[j] = 2 * twoToThe[j-1];
+            let twoToThe[j] = twoToThe[j-1] + twoToThe[j-1];	// twoToThe[j-1] * 2
             let j = j + 1;
         }
+		
+		return;
     }
 
     function boolean bit(int x, int j) {
@@ -19,97 +22,99 @@ class Math {
         let temp = x & twoToThe[j];
 
         if (temp>0){
-            Return true;
+            return true;
         }
 
-        Return false;
+        return false;
     }
  
     function int multiply(int x, int y) {
         /* use long multiply algorithm, which gives O(logN) runtime
             for N-bit binary num */
-        var int sum;
-        var int shiftedX;
-        var j;
+        var int sum, shiftedX, j;
 
         let sum = 0;
         let shiftedX = x;
         let j = 0;
 
         while (j < 16) {
-            if (bit(y, j)) {
+            if (Math.bit(y, j)) {
                 let sum = sum + shiftedX;
             }
 
-            let shiftedX = shiftedX * 2;
+            let shiftedX = shiftedX + shiftedX;	// same as shiftedX * 2, to avoid recursive call
             let j = j + 1; 
         }
 
-        Return sum;
+        return sum;
     }
 
-    function int divde(int x, int y) {
+    function int divide(int x, int y) {
         /* use long division algorithm, which gives O(logN) runtime
             for N-bit binary num */
         var int q;
 
         // y can overflow and become negative as we multiply by 2
         if ((y > x) | (y < 0)) {
-            Return 0;
+            return 0;
         }
         
-        let q = divide(x, 2*y);
+        let q = Math.divide(x, 2*y);
         
-        if (x-2*q*y < y){
-            Return 2*q;
+        if (x-(2*q*y) < y){
+            return 2*q;
+		}
         else{
-            Return 2*q+1;
+            return 2*q+1;
         }
     }
 
     function int abs(int x) {
-        if (x >= 0){
-            Return x;
+        if (x > -1){
+            return x;
         }
-        else {
-            Return -1 * x;
+        else{
+            return -1 * x;
         }
     }
     
     function int min(int x, int y) {
         if (x<y){
-            Return x;
+            return x;
         }
         else {
-            Return y;
+            return y;
         }
-    
+    }
+	
     function int max(int x, int y) {
         if (x<y){
-            Return y;
+            return y;
         }
         else {
-            Return x;
+            return x;
         }
+	}
 
     function int sqrt(int x){
         // if y = sqrt(x), then y^2 = x, plus, sqrt is monotonically increasing
         // find y such that y^2 <= x <= (y+1)^2
-        var int y;
-        var int j;
-        var y_2j_squared;
+        var int y, j, y_2j_squared;
         let j = 7;  // n = 16, n/2 - 1
         let y = 0;
 
-        while (j >= 0){
-            let y_2j_squared = multiply(y + twoToThe[j], y + twoToThe[j]);
+        while (j > -1){
+            let y_2j_squared = Math.multiply(y + twoToThe[j], y + twoToThe[j]);
 
             // y_2j_squared can overflow and be a negative number, so check if it is positive
-            if ((y_2j_squared <= x) & (y_2j_squared > 0)){
+            if ((y_2j_squared < x + 1) & (y_2j_squared > 0)){
                 let y = y + twoToThe[j];
             }
+			let j = j - 1;
         }
 
         return y;
+	}
 }
+
 
