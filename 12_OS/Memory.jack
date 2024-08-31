@@ -64,15 +64,7 @@ class Memory {
 		let currentFreeBlockTotalSize = currentFreeBlock[1] + 2;	// overhead of 2
 
 
-		// case 1: finding a slot at the very begining of LL
-		if ((prevFreeBlock = null) & (nextFreeBlock = null)){	// first allocation ever
-			let currentFreeBlock[1] = currentFreeBlock[1] - segmentTotalSize;	// set new size after allocation
-			// set the size of the allocated block
-			let currentFreeBlock[currentFreeBlockTotalSize - size] = size;
-			// plus 1 bc the return address should point to the starting address of data
-			return currentFreeBlock + currentFreeBlockTotalSize - size + 1;	
-		}
-        while (~(nextFreeBlock = null)){
+        while (~(currentFreeBlock = null)){
             let currentFreeBlockTotalSize = currentFreeBlock[1] + 2;    // overhead of 2
             // case where it takes up the entire free block
             if (currentFreeBlockTotalSize - segmentTotalSize < 3){
