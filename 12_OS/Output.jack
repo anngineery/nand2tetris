@@ -28,7 +28,9 @@ class Output {
         let frameSizeX = 8;
         let frameSizeY = 11;
 
-        do Output.initMap()
+        do Output.initMap();
+		
+		return;
     }
 
     // Initializes the character map array
@@ -151,9 +153,9 @@ class Output {
     // Creates the character map array of the given character index, using the given values.
     function void create(int index, int a, int b, int c, int d, int e,
                          int f, int g, int h, int i, int j, int k) {
-	var Array map;
+		var Array map;
 
-	let map = Array.new(11);
+		let map = Array.new(11);
         let charMaps[index] = map;
 
         let map[0] = a;
@@ -194,13 +196,19 @@ class Output {
         let cursorCol = j;
         let cursorRow = i;
 
-        while (x < frameXSize){
-            while (y < frameYSize){
+		do Screen.setColor(false); 	// set color to white
+		
+        while (x < frameSizeX){
+            while (y < frameSizeY){
                 do Screen.drawPixel(pixelX + x, pixelY + y);
                 let y = y + 1;
             }
             let x = x + 1;
+			let y = 0;
         }
+		
+		do Screen.setColor(true); 	// set color to black
+		return;
     }
 
     /** Displays the given character at the cursor location,
@@ -215,6 +223,7 @@ class Output {
         let charMap = Output.getMap(c); 
         let x = 0;
         let y = 0;
+		let twoToThe = Array.new(8);
         let twoToThe[0] = 1;
         let twoToThe[1] = 2;
         let twoToThe[2] = 4;
@@ -226,10 +235,6 @@ class Output {
         let pixelX = cursorCol * frameSizeX;
         let pixelY = cursorRow * frameSizeY; 
 
-        // first clean that cursor position
-        Output.moveCursor(cursorCol, cursorRow);
-
-        // second, print the char
         while (y < frameSizeY){
             let row8Bit = charMap[y];
             
@@ -240,16 +245,23 @@ class Output {
                 let x = x + 1;
             }
             let y = y + 1;
+			let x = 0;
         }
 
-        // third, advance the cursor
-        if (cursorCol == 63){   // end of line
+        // advance the cursor
+        if (cursorCol = 63){   // end of line
             let cursorCol = 0;
-            let cursorRow = cursorRow + 1;
+			if (cursorRow = 22){   // end of screen
+				let cursorRow = 0;
+			}
+			else{
+				let cursorRow = cursorRow + 1;
+			}
         }
         else{
             let cursorCol = cursorCol + 1;
         }
+		return;
     }
 
     /** displays the given string starting at the cursor location,
@@ -267,29 +279,32 @@ class Output {
             do Output.printChar(currChar);
             let i = i + 1;
         }
+		
+		return;
     }
 
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
-        if (i < 10){
-            Output.printChar(48 + i);
-        }
-        else{
-            Output.printInt(i/10);
-            Output.printChar(48 + i - (i/10) * 10); // this is i mod 10
-        }
+        var String s;
+		let s = String.new(6);	// 16 bit signed integer range: -32768 ~ 32767
+		do s.setInt(i);
+		do Output.printString(s);
+		
+		return;
     }
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
         let cursorCol = 0;
         let cursorRow = cursorRow + 1;
+		
+		return;
     }
 
     /** Moves the cursor one column back. */
     function void backSpace() {
-        if (cursorCol == 0){
+        if (cursorCol = 0){
             let cursorCol = 63;
             let cursorRow = cursorRow - 1;
         }
@@ -297,6 +312,7 @@ class Output {
             let cursorCol = cursorCol - 1;
         }
         do Output.moveCursor(cursorCol, cursorRow);
+		
+		return;
     }
 }
-
