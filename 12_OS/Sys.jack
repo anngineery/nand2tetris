@@ -17,6 +17,7 @@ class Sys {
         do Screen.init();
         do Main.main();
 		
+        Sys.halt();
 		return;
     }
 

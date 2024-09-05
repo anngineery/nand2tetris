@@ -21,11 +21,11 @@ class Math {
         var int temp;
         let temp = x & twoToThe[j];
 
-        if (temp>0){
-            return true;
+        if (temp=0){
+            return false;
         }
 
-        return false;
+        return true;
     }
  
     function int multiply(int x, int y) {
