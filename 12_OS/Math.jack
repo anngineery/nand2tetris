@@ -21,7 +21,7 @@ class Math {
         var int temp;
         let temp = x & twoToThe[j];
 
-        if (temp=0){
+        if (temp = 0){
             return false;
         }
 
@@ -53,19 +53,32 @@ class Math {
         /* use long division algorithm, which gives O(logN) runtime
             for N-bit binary num */
         var int q;
-
+		var int absX, absY;
+		var int sign;
+		
+		let absX = Math.abs(x);
+		let absY = Math.abs(y);
+		let sign = 1;
+		
+		if ((x < 0) & (y > 0)){
+			let sign = -1;
+		}
+		if ((x > 0) & (y < 0)){
+			let sign = -1;
+		}
+		
         // y can overflow and become negative as we multiply by 2
-        if ((y > x) | (y < 0)) {
+        if ((absY > absX) | (absY < 0)) {
             return 0;
         }
         
-        let q = Math.divide(x, 2*y);
+        let q = Math.divide(absX, 2*absY);
         
-        if (x-(2*q*y) < y){
-            return 2*q;
+        if ((absX-(2*q*absY)) < absY){
+            return (2*q) * sign;
 		}
         else{
-            return 2*q+1;
+            return (2*q+1) * sign;
         }
     }
 
@@ -107,7 +120,7 @@ class Math {
             let y_2j_squared = Math.multiply(y + twoToThe[j], y + twoToThe[j]);
 
             // y_2j_squared can overflow and be a negative number, so check if it is positive
-            if ((y_2j_squared < x + 1) & (y_2j_squared > 0)){
+            if (((y_2j_squared = x) | (y_2j_squared < x)) & (y_2j_squared > 0)){
                 let y = y + twoToThe[j];
             }
 			let j = j - 1;
