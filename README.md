@@ -9,8 +9,9 @@ Build a fully functioning general-purpose computer, both hardware and software c
 - Peripherals (Memory-mapped I/O):
 	- Screen: 512 * 256 pixels; address starts from 16384
  	- Keyboard: single word memory map located at address 24576
-  
-## Instructions
+
+## Hack Assembly Language & Machine Code
+### Instructions
 - A (addressing) instructions: set A register to 15-bit value that represents a memory address
    - Syntax: (symbolic representation) `@value` | (binary representation) `0vvv vvvv vvvv vvvv`
    - Purpose:
@@ -25,16 +26,16 @@ Build a fully functioning general-purpose computer, both hardware and software c
    - Purpose:
       - allow repetitions (loops), conditional statements and subroutine calling
 
-## Symbols
+### Symbols
 Predefined symbols for a special subset of RAM addresses
 1. Virtual registers: R0-R15 (equivalent to M[0]-M[15]
 2. Predefined pointers: SP(R0), LCL(R1), ARG(R2), THIS(R3), THAT(R4)
 3. I/O pointers: SCREEN(=M[16384]), KBD(=M[24576]) NOTE - 16384 and 24576 are base addresses of the memory map
 
-**Label symbols** are user-defined symbols used to label destinations of `goto` commands. It can only be defined once and can be used anywhere in the program even before the definition.
+**Label symbols** are user-defined symbols used to label destinations of `goto` commands. It can only be defined once and can be used anywhere in the program even before the definition.\
 **Variable symbols** - assembler chooses an unique memory address starting M[16]
 
-## Syntax Conventions & File Format
+### Syntax Conventions & File Format
 - Binary code file: .hack extension, each line = 1 machine instruction
 - Assembly language file: .asm extension, each line = either an A instruction, C instruction or a symbol declaration
 - Constants: positive #s written in decimal format
@@ -47,19 +48,17 @@ Predefined symbols for a special subset of RAM addresses
    - Variables -> lower case
 - End the program with an infinite loop, otherwise the program will keep going
 
-
 # Part 1: Hardware
 Using a mock Hardware Description Language (HDL), implement the boolean logic for 15 elementary logic gates, an ALU, RAM, and finally integrate them all to build the HACK computer platform
 
 # Part 2: Software
-
+Write an assembler that converts the Hack assembly code to machine code
+Write a compiler that converts the Jack high-level langauge to the intermediate language (VM language)
 
 # Inspiration
-[Build a Modern Computer from First Principles: From Nand to Tetris](https://www.nand2tetris.org/) offered by Hebrew University of Jerusalem. This is a project-based course and all the code uploaded here is written by me.
+[Build a Modern Computer from First Principles: From Nand to Tetris](https://www.nand2tetris.org/) offered by Hebrew University of Jerusalem. This is a project-based course and all the code uploaded here is my original work.
 
-
-## Week 5
-Project: Build a full Hack Computer System that can run Hack assembly language programs (week 4) using components built from week 1-3 
+-----
 
 ## Week 7 + 8
 Project: Building a VM translator (part 1 - only handles arithmetic and memory segment access operations, part 2 - add branching and subroutine calling to Week 7's version)
