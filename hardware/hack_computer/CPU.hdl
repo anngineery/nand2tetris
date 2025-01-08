@@ -1,0 +1,97 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
+
+/**
+ * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * two registers named A and D, and a program counter named PC.
+ * The CPU is designed to fetch and execute instructions written in 
+ * the Hack machine language. In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM==0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time step. If reset==1 then the 
+ * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    // Put your code here:
+
+    // part 1: A register
+    // 2 scenarios: (1) A instruction then full instruction is loaded. (2) If C instruction and destination includes A
+    Mux16(a=instruction, b=aluOut ,sel=instruction[15] ,out=aRegInput);
+    Not(in=instruction[15] ,out=isAInstruction );   
+    Or(a=isAInstruction ,b=instruction[5] ,out=aRegLoad);
+    ARegister(in=aRegInput ,load=aRegLoad ,out=aRegOutput ,out[0..14]=addressM);
+
+    // part 2: D register
+    // Write to it only when C instruction destination includes D. And in this case, the input will be C instruction computation (i.e ALU output)
+    And(a=instruction[15] ,b=instruction[4] ,out=dRegLoad);
+    DRegister(in=aluOut ,load=dRegLoad ,out=dRegOutuput);
+
+    // part 3: ALU
+    // D is always used, but depending on the a bit of the C instruction, either A or M is used for computation
+    // ALU from chapter 2 handles every computation we want, so we need to plug in right control bits. Reading about ALU in chapter 2 helped a lot 
+    Mux16(a=aRegOutput,b=inM ,sel=instruction[12] ,out=aOrM);
+    ALU(x=dRegOutuput ,y=aOrM ,zx=instruction[11] ,nx=instruction[10] ,zy=instruction[9] ,ny=instruction[8] ,f=instruction[7] ,no=instruction[6] ,out=aluOut , out=outM ,zr=zr ,ng=ng );
+
+    // part 4: PC
+    // increment if no jump is specified in the C instruction. (jump bits are all zeros)
+    // if jump is specified and the condition is met, then load the input, the content of A register
+    // how to make sense of zr and ng (ALU control output):
+    // zr=0, ng=0 -> positive number
+    // zr=0, ng=1 -> negative number
+    // zr=1, ng=0 -> zero
+    // zr=1, ng=1 -> not possible
+    And(a=instruction[2] ,b=instruction[1] ,out=j1Andj2 );
+    And(a=j1Andj2 ,b=instruction[0] ,out=alwaysJump );
+    Not(in=alwaysJump ,out=neverJump );
+    Not(in=zr ,out=notZr );
+    Not(in=ng ,out=notNg );    
+    And(a=notZr ,b=notNg ,out=positive );
+    And(a=positive ,b=instruction[0] ,out=jgt );
+    And(a=zr ,b=instruction[1] ,out=jeq );//
+    And(a=ng ,b=instruction[2] ,out=jlt );//
+    And(a=instruction[2] ,b=instruction[0] ,out=j1Andj3 );
+    And(a=j1Andj3 ,b=notZr ,out=jne );//
+
+    Or(a=jeq ,b=jgt ,out=jge );
+    Or(a=jeq ,b=jlt ,out=jle );
+    Or(a=jge ,b=jle ,out=jgele );
+    Or(a=jgele ,b=jne ,out=jgelene );
+    Or(a=jgele ,b=alwaysJump ,out=jumpConditionFinal );
+
+    // If it's an A instruction then jumpConditionFinal should be voided
+    And(a=jumpConditionFinal ,b=instruction[15] ,out=pcLoad );
+    // If it's an A instrument, always increment, if not only when neverJump is true
+    Or(a=isAInstruction ,b=neverJump ,out=increment );
+
+    PC(in=aRegOutput ,load=pcLoad ,inc=increment, reset=reset ,out=pcOut, out[0..14]=pc);
+
+    //writeM is equal to d3 bit only when we know it is a C instruction
+    And(a=instruction[3] ,b=instruction[15] ,out=writeM );
+}
