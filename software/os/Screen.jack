@@ -1,0 +1,166 @@
+/**
+ * A library of functions for displaying graphics on the screen.
+ * The Hack physical screen consists of 256 rows (indexed 0..255, top to bottom)
+ * of 512 pixels each (indexed 0..511, left to right). The top left pixel on 
+ * the screen is indexed (0,0).
+ */
+class Screen {
+    static Array twoToThe;     
+    static boolean isColorBlack;
+    static int screenBaseAddress;
+    static int screenLastAddress;
+
+    function void init() {
+        var int j;
+        
+        let j = 1;
+		let twoToThe = Array.new(16);
+        let twoToThe[0] = 1;
+        let screenBaseAddress = 16384;
+        let screenLastAddress = 24575;
+		let isColorBlack = true;
+
+        while (j < 16){
+            let twoToThe[j] = 2 * twoToThe[j-1];
+            let j = j + 1;
+        }
+		
+		return;
+    }
+
+    function void clearScreen(){
+        var int j;
+        let j = screenBaseAddress;
+
+        while (j < screenLastAddress + 1){
+            do Memory.poke(j, 0);
+            let j = j + 1;
+        }
+		
+		return;
+    }
+
+    /** Sets the current color, to be used for all subsequent drawXXX commands.
+     *  Black is represented by true, white by false. */
+    function void setColor(boolean b){
+        let isColorBlack = b;
+		return;
+    }
+
+    function void drawPixel(int x, int y){
+        // 512 / 16bits = 32 --> 1 row is broken into 32 addresses
+        var int xDividedBy16, xMod16, address, value;
+
+        let xDividedBy16 = x / 16;
+        let address = screenBaseAddress + (32 * y) + xDividedBy16;
+        let xMod16 = x - (16 * xDividedBy16);
+        // we can't just change that bit, but change the whole word        
+        let value = Memory.peek(address);   
+
+        if (isColorBlack){
+            let value = value | twoToThe[xMod16];
+        }
+        else{
+            let value = value & (~twoToThe[xMod16]);
+        }
+
+        do Memory.poke(address, value);
+		return;
+    }
+
+    function void drawLine(int x1, int y1, int x2, int y2){
+        // NOTE: performance improvement that can be made:
+        // for vertical and horizontal lines, don't draw one pixel at a time
+        // but do it all at once per address chunk
+        var int incrementXFactor, incrementYFactor;
+        var int incrementX, incrementY;
+		var int dx, dy, angleDiff;
+
+        let incrementX = 0;
+        let incrementY = 0;
+		let dx = x2 - x1;
+		let dy = y2 - y1;
+
+		if (dx > 0){
+			let incrementXFactor = 1;
+		}
+		else{
+			let incrementXFactor = -1;
+		}
+		
+		if (dy > 0){
+			let incrementYFactor = 1;
+		}
+		else{
+			let incrementYFactor = -1;
+		}
+		
+        // the line is horizontal line
+        if (y1 = y2){
+            while (~((x1 + incrementX) = x2)){
+                do Screen.drawPixel(x1 + incrementX, y1);
+                let incrementX = incrementX + (1 * incrementXFactor);
+            } 
+    
+            return;
+        }
+
+        // the line is vertical line
+        if (x1 = x2){
+            while (~((y1 + incrementY) = y2)){
+                do Screen.drawPixel(x1, y1 + incrementY);
+                let incrementY = incrementY + (1 * incrementYFactor);
+            } 
+
+            return;
+        }
+
+        // diagonal line
+		while ((Math.abs(incrementX) < (Math.abs(dx) + 1)) & (Math.abs(incrementY) < (Math.abs(dy) + 1))){
+			do Screen.drawPixel(x1 + incrementX, y1 + incrementY);
+			let angleDiff = Math.abs(incrementX * dy) - Math.abs(incrementY * dx);
+			if (angleDiff < 0){
+				let incrementX = incrementX + (1 * incrementXFactor);
+			}
+			else{
+				let incrementY = incrementY + (1 * incrementYFactor);
+			}
+		}
+		return;
+	}
+
+    function void drawRectangle(int x1, int y1, int x2, int y2){
+		// this draws a filled rectangle
+		var int currY, targetY;
+		let currY = Math.min(y1, y2);
+		let targetY = Math.max(y1, y2);
+		
+		while (currY < (targetY + 1)){	
+			do Screen.drawLine(x1, currY, x2, currY);
+			let currY = currY + 1;
+		}
+		
+		return;
+    }
+
+    function void drawCircle(int x, int y, int r){
+		// this draws a filled circle
+        var int j;
+        var int rSquared, jSquared;
+        var int diagonalDistance;
+
+        let j = 0;
+        let rSquared = r * r;
+
+        while (j < (r + 1)){
+            let jSquared = j * j; 
+            let diagonalDistance = Math.sqrt(rSquared - jSquared);
+			do Screen.drawLine(x - diagonalDistance, y - j, x + diagonalDistance, y - j);
+			do Screen.drawLine(x - diagonalDistance, y + j, x + diagonalDistance, y + j);
+            let j = j + 1;
+        } 
+	
+		return;
+    }
+}
+

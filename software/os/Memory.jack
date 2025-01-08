@@ -1,0 +1,131 @@
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+
+For the heap management, a linked list of free block structures is used.
+(ex) freeListPtr --> free block 1 --> free block 2 --> ...
+    structure of a free block:
+    | nxt ptr             |
+    | size (of space only)|
+    | empty space         |
+    | ...                 |
+    -----------------------
+    -> therefore, use (size + 2) blocks in total
+
+
+    structure of an occupied block:
+    | size |
+    | data |    --> this is the location returned upon allocation
+    | ...  |
+    -> therefore, need (size + 1) blocks in total
+*/
+class Memory {
+    static Array ram;
+    static int freeListPtr; // contains absolute RAM addr, not relative heap addr
+ 
+    function void init() {
+        // heap addr is 2048-16383 (inclusive)
+        var int heapBase;		
+        var int heapSize;
+		
+		let heapBase = 2048; // agreed upon heap base address
+		let heapSize = 14335;
+        let ram = 0; // make 1st element to be addr 0
+        let freeListPtr = heapBase;
+        // at initialization, the whole heap is a free block
+        let ram[heapBase] = null; 
+        let ram[heapBase + 1] = heapSize - 2;   // free block has overhead of 2
+		
+		return;
+    }
+
+    function int peek(int address){
+        return ram[address];
+    }
+
+    function void poke(int address, int value){
+        let ram[address] = value;
+		
+		return;
+    }
+
+    function Array alloc(int size){
+        /* traverse the freeBlock LL and find the first free block
+        that can fit the data of size _size_ */
+        var Array currentFreeBlock, prevFreeBlock, nextFreeBlock;
+        var int currentFreeBlockTotalSize;
+        var int segmentTotalSize;
+
+        let prevFreeBlock = null;
+        let currentFreeBlock = freeListPtr; // first free block
+        let nextFreeBlock = currentFreeBlock[0];
+        let segmentTotalSize = size + 1;    // overhead of 1
+		let currentFreeBlockTotalSize = currentFreeBlock[1] + 2;	// overhead of 2
+
+
+        while (~(currentFreeBlock = null)){
+            let currentFreeBlockTotalSize = currentFreeBlock[1] + 2;    // overhead of 2
+            // case where it takes up the entire free block
+            if (currentFreeBlockTotalSize - segmentTotalSize < 3){
+                // case 2: finding a match in the middle of LL
+				// remove the current free block from LL
+				let prevFreeBlock[0] = nextFreeBlock;
+                let currentFreeBlock[0] = size;
+				
+                return currentFreeBlock + 1;
+            }
+
+            // case 3: need to break off current Free Block
+			// no need to remove this block from LL, but need to adjust the size
+			if (currentFreeBlockTotalSize - segmentTotalSize > 2){  
+				let currentFreeBlock[1] = currentFreeBlock[1] - segmentTotalSize; // new empty space
+				// set the size of the allocated block
+				let currentFreeBlock[currentFreeBlockTotalSize - size] = size;
+				// plus 1 bc the return address should point to the starting address of data
+				return currentFreeBlock + currentFreeBlockTotalSize - size + 1;
+			}
+
+            // traverse the LL
+            let prevFreeBlock = currentFreeBlock;
+            let currentFreeBlock = nextFreeBlock;
+            let nextFreeBlock = nextFreeBlock[0];
+        }
+		
+		// finally could not find a match
+		return null;
+    }
+
+    function void deAlloc(Array object){
+        var int size, overhead;
+        var Array currentFreeBlock, prevFreeBlock, nextFreeBlock;
+
+        let size = ram[object - 1];
+        let overhead = 2;
+		let prevFreeBlock = null;
+        let currentFreeBlock = freeListPtr;
+		let nextFreeBlock = currentFreeBlock[0];
+   
+        // traverse through the LL to reach the end 
+        while (~(currentFreeBlock = null)){
+			
+            // see if the current block and the next block can be coalesce
+            if ((nextFreeBlock - currentFreeBlock) = (currentFreeBlock[1] + overhead)){
+                let currentFreeBlock[1] = currentFreeBlock[1] + nextFreeBlock[1] + overhead; 
+                let currentFreeBlock[0] = nextFreeBlock[0];
+			}
+			
+            // traverse the LL
+            let prevFreeBlock = currentFreeBlock;
+            let currentFreeBlock = nextFreeBlock;
+            let nextFreeBlock = nextFreeBlock[0];
+        }
+
+        // attach the new block to LL
+        let prevFreeBlock[0] = object - 1;
+		let ram[object - 1] = null;	// next pointer
+        let ram[object] = size - 1;	// size of the data block
+			
+		return;
+	}
+}
