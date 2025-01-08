@@ -1,14 +1,13 @@
 """
-Jack syntax analyzer that converts the high-level Jack language into the intermediate VM language.
+Converts the high-level Jack language into the intermediate VM language.
 It does not handle error reporting as it assumes all input conforms to Jack language grammar perfectly.
-The input to JackAnalyzer can be a single file (x.jack) or a directory that contains 1+ jack files. 
+The input can be a single file (x.jack) or a directory that contains 1+ jack files. 
 For each .jack file, an output file should have the same name with .xml extension.
 
 Seperation of Responsibilities:
 - Tokenizer's only responsibility is to break down the input file into tokens.
-- CompilationEngine's only responsbility is to structure token streams into a proper program
+- Compilation engine's only responsbility is to structure token streams into a proper program
     structure using the language grammar specification.
-- JackAnalyzer handles orchestration and file handling (including XML string formatting). Essentially, whatever is temporary and will be replaced by the actual code writer soon is done by JackAnalyzer so the transition is smooth.
 """
 from pathlib import Path
 import sys
