@@ -6,6 +6,9 @@ It may be able to handle:
 - more sophisticated symbols (ex) pointer arithmetic, etc
 - macro commands
 
+## Testing
+A working assembler is provided by the course. This output was compared against that of my assembler to ensure the correctness.
+
 # Virtual Machine
 ## Specs
 - stack-based
