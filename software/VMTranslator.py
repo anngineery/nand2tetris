@@ -102,7 +102,7 @@ class CodeWriter():
     def __init__(self, output_fp: Path):
         self.output_file = output_fp
         self.translated_commands = []   # list to store translated asm instructions
-        self.unique_label_index = 0 # TODO: I have to increment this somewhere. currently not doing it
+        self.unique_label_index = 0
         self.current_vm_file = None
 
     def set_file_name(self, file_name: str):
