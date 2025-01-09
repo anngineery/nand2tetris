@@ -85,3 +85,19 @@ Feed in Jack program files and run the resulting VM files on the VM Emulator to 
 - arrays
 - strings
 - objects and static variables
+
+# Operating System
+Provide low-level services such as accessing the hardware resources (RAM, keyboard, screen, etc) and libraries for common math operations, string processing operations, etc.
+
+## What is included
+1. Math
+2. Array
+3. Memory
+4. Screen
+5. Output
+6. String
+7. Keyboard
+8. Sys
+
+## Testing
+Compile the OS files along with a test .jack file that utilizes these OS functions with the provided compiler. Then run the output file generated in the VM Emulator to see it does what it is supposed to do
