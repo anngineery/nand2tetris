@@ -10,6 +10,7 @@ It may be able to handle:
 A working assembler is provided by the course. This output was compared against that of my assembler to ensure the correctness.
 
 # Virtual Machine
+This is the second half of 2-tier compilation process. The VM converts the intermediate language (also called VM language) into the Hack assembly language.
 ## Specs
 - stack-based
   ```
@@ -40,6 +41,7 @@ A working assembler is provided by the course. This output was compared against 
 	- `return`
 
 # Compiler
+This is the first half of 2-tier compilation process. The compiler converts the Jack language (high-level language) into the intermediate language (also called VM language).
 ## Booting Process
 The compiler's expected to create 1 Main.vm file, which includes 1 VM function called `main`. Given this, the VM implementation is expected to set the SP to 256 and call `Sys.Init`, an argument-less OS function at the start. This `Sys.Init` in turns calls `Main.main` and the infinite loop at the end. Recall that the HACK platform is set up in a way that when it resets, it starts executing the instruction from ROM[0] and so on.
 
