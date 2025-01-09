@@ -40,6 +40,9 @@ This is the second half of 2-tier compilation process. The VM converts the inter
 	- `call <function_name> <num_args>`: the caller already pushed <num_args> arguments to the stack
 	- `return`
 
+## Testing
+Process VM programs and run the resulting assembly files on the CPU Emulator to see it does what it's supposed to (the VM programs, test scripts that handle the initialization of things and the CPU Emulator are supplied by the course). As a debugging tool, the VM Emulator, which helps understand what happens in the input VM file visually, was also supplied.
+
 # Compiler
 This is the first half of 2-tier compilation process. The compiler converts the Jack language (high-level language) into the intermediate language (also called VM language).
 ## Booting Process
@@ -72,3 +75,13 @@ The parser uses recursive descent parsing without backtracking. It's a top-down 
 ## Jack Program Compilation
 - Each class is compiled separately
 - within one class, each subroutine is looked at individually and they don't interfere with one another
+
+## Testing
+Feed in Jack program files and run the resulting VM files on the VM Emulator to see if the expected and actual results are identical (the test files and the VM Emulator were supplied by the course). The input Jack programs involve a lot features of the language to ensure the compiler can compile them correctly. Some examples are:
+- arithmetic expressions
+- various statements (if, while, do , let, return)
+- function calls
+- object oriented features (constructors, methods, fields, etc)
+- arrays
+- strings
+- objects and static variables
