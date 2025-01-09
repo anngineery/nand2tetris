@@ -2,6 +2,14 @@
 This is an assembler for HACK computer. 
 To focus on the actual translation part, I assume that
 the assembly file given is perfect and follows the expected convention.
+
+Input: Hack assembly file (.asm)
+Output: Hack binary file (.hack)
+
+Components:
+1. Parser - sanitize instructions and parse them
+2. Symbol Table - during the first scan, get labels and their addresses
+3. Decoder - decode assembly code into machine instructions
 """
 import sys
 from pathlib import Path
@@ -54,6 +62,10 @@ class Parser():
 class Decoder():
     """
     Given a line of assembly code, convert it into the equivalent machine code. 
+
+    Contains a Symbol Manager instance as a member variable. This is to fill the symbol table
+    with labels during the first scan. During the second scan, the actual decoding happens and in this
+    process user-defined variables are also added to the symbol table as they are encountered. 
     """
     comp_mapping = {
         "0": "101010",
@@ -114,7 +126,7 @@ class Decoder():
 
     def _decode_a_instruction(self, instruction: str) -> str:
         """
-        A instruction format: c@positive_integer or @variable_name
+        A instruction format: @positive_integer or @variable_name
         By convention, variable names cannot start with a digit.
         """
         prefix = "0"
@@ -123,7 +135,6 @@ class Decoder():
             binary_15bits = "{0:015b}".format(int(instruction[1:]))
         
         except ValueError: # what comes after "@" is a char not a digit
-            #import pdb; pdb.set_trace()
             address = self.symbol_manager.get_address(instruction[1:])
 
             if address is None:
