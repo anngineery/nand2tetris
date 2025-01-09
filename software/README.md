@@ -1,6 +1,11 @@
 # Assembler
 More information about the assembly language can be found [here](https://github.com/anngineery/nand2tetris?tab=readme-ov-file#hack-assembly-language--machine-code)
 
+## How would a real-world assembler differ from this assembler?
+It may be able to handle:
+- more sophisticated symbols (ex) pointer arithmetic, etc
+- macro commands
+
 # Virtual Machine
 ## Specs
 - stack-based
